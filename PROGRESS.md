@@ -79,3 +79,12 @@ No critical Phase 2 requirement remains identified by the automated test suite. 
 ## Recommended Phase 3
 
 Proceed only after a separate instruction: Strategy definitions and Bot Instance metadata/lifecycle management, keeping strategy logic independent of Bot lifecycle and Execution. Do not begin Phase 3 in this task.
+
+
+## Phase 1 — KuCoin integration (AGENT-01-KUCOIN)
+
+**Status: BLOCKED — not implemented.** The isolated branch `feature/arbitrage-live-integration` was created from main commit `2ea9f39f5cd1bc97253a2eabadf1753fbc1b6ea6`. Repository inspection confirmed the Python modular-monolith package root is `trading_platform/`, with domain metadata, application services, a repository Protocol/SQLite adapter, TOML configuration, and central CLI readiness/command registry. No exchange connector exists yet.
+
+Implementation and tests could not safely proceed because the execution environment failed to clone the public repository: `Could not resolve host: github.com`. Individual GitHub file operations do not provide a local Python environment or permit package-level test execution. No unexecuted adapter code was committed. No credentials or financial accounts were accessed; no live order or transaction was submitted; main was not changed or merged.
+
+Detailed blocker, inspected architecture, exact clone error, and next-agent requirements: [AGENT-01 report](docs/agents/reports/PHASE-1-KUCOIN-AGENT-01.md).
