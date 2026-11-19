@@ -88,3 +88,10 @@ Proceed only after a separate instruction: Strategy definitions and Bot Instance
 Implementation and tests could not safely proceed because the execution environment failed to clone the public repository: `Could not resolve host: github.com`. Individual GitHub file operations do not provide a local Python environment or permit package-level test execution. No unexecuted adapter code was committed. No credentials or financial accounts were accessed; no live order or transaction was submitted; main was not changed or merged.
 
 Detailed blocker, inspected architecture, exact clone error, and next-agent requirements: [AGENT-01 report](docs/agents/reports/PHASE-1-KUCOIN-AGENT-01.md).
+
+
+### AGENT-01 continuation — environment recovery (2026-11-19)
+
+**Status remains BLOCKED — no implementation or tests.** The only local execution runtime inspected provides Python 3.13.5 and Git 2.47.3, but has no outbound DNS/network: `github.com`, `api.github.com`, and `www.kucoin.com` fail name resolution; Python HTTPS probes return `[Errno -3] Temporary failure in name resolution`. No separate terminal/workspace/Codespaces runtime was available, and no paid environment was provisioned.
+
+The required branch was rechecked before updating: `feature/arbitrage-live-integration` at `92c4fe17f423814de1da3369cfb5e1257a2115e0`, ahead of `main` by 2 commits and behind by 0; merge base remains `2ea9f39f5cd1bc97253a2eabadf1753fbc1b6ea6`. Both earlier commits were preserved. No application files were modified and no tests were run. Detailed environment checks and exact errors are recorded in the [continuation report](docs/agents/reports/PHASE-1-KUCOIN-AGENT-01.md).
