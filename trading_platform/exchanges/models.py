@@ -2,28 +2,18 @@
 from dataclasses import dataclass
 from decimal import Decimal
 from datetime import datetime
+from enum import Enum
 from typing import Optional
 
 
-@dataclass(frozen=True)
-class Ticker:
-    exchange: str
-    symbol: str
-    price: Optional[Decimal]
-    bid: Optional[Decimal]
-    ask: Optional[Decimal]
-    retrieved_at: datetime
-    event_timestamp: Optional[datetime] = None
-    high_24h: Optional[Decimal] = None
-    low_24h: Optional[Decimal] = None
-    change_24h: Optional[Decimal] = None
-    volume_24h: Optional[Decimal] = None
+class QuoteSource(str, Enum):
+    WEBSOCKET = "WEBSOCKET"
+    REST = "REST"
 
-    @property
-    def spread(self) -> Optional[Decimal]:
-        if self.bid is None or self.ask is None:
-            return None
-        return self.ask - self.bid
+
+class QuoteFreshness(str, Enum):
+    FRESH = "FRESH"
+    STALE = "STALE"
 
 
 @dataclass(frozen=True)
@@ -32,6 +22,7 @@ class SymbolMetadata:
     symbol: str
     base_currency: str
     quote_currency: str
+    trading_enabled: Optional[bool] = None
     base_min_size: Optional[Decimal] = None
     base_max_size: Optional[Decimal] = None
     quote_min_size: Optional[Decimal] = None
@@ -40,58 +31,44 @@ class SymbolMetadata:
     quantity_increment: Optional[Decimal] = None
     base_precision: Optional[int] = None
     quote_precision: Optional[int] = None
-    trading_status: str = "unknown"
 
 
 @dataclass(frozen=True)
-class OrderBookLevel:
-    price: Decimal
-    quantity: Decimal
-
-
-@dataclass(frozen=True)
-class OrderBook:
+class BestBidAskQuote:
     exchange: str
     symbol: str
-    retrieved_at: datetime
-    bids: tuple[OrderBookLevel, ...]
-    asks: tuple[OrderBookLevel, ...]
-    event_timestamp: Optional[datetime] = None
-    sequence: Optional[int] = None
-    snapshot: bool = True
+    best_bid: Decimal
+    bid_quantity: Decimal
+    best_ask: Decimal
+    ask_quantity: Decimal
+    source: QuoteSource
+    event_timestamp: Optional[datetime]
+    received_at: datetime
+    freshness: QuoteFreshness = QuoteFreshness.FRESH
+
+    @property
+    def spread(self) -> Decimal:
+        return self.best_ask - self.best_bid
+
+    def execution_price(self, side: str) -> Decimal:
+        if not isinstance(side, str):
+            raise ValueError("side must be buy or sell")
+        normalized_side = side.lower()
+        if normalized_side == "buy":
+            return self.best_ask
+        if normalized_side == "sell":
+            return self.best_bid
+        raise ValueError("side must be buy or sell")
 
 
 @dataclass(frozen=True)
 class Balance:
     currency: str
-    total: Optional[Decimal]
+    total: Decimal
     available: Decimal
     hold: Decimal
     account_type: str
     retrieved_at: datetime
-
-
-@dataclass(frozen=True)
-class FeeFallback:
-    exchange: str
-    symbol: Optional[str]
-    maker_rate: Decimal
-    taker_rate: Decimal
-    source: str
-    verified: bool
-
-
-@dataclass(frozen=True)
-class FeeInfo:
-    exchange: str
-    symbol: Optional[str]
-    maker_rate: Optional[Decimal]
-    taker_rate: Optional[Decimal]
-    source: str
-    status: str
-    retrieved_at: datetime
-    verified: Optional[bool] = None
-    warning: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -109,10 +86,29 @@ class DryRunOrder:
     quantity: Decimal
     reference_price: Decimal
     estimated_notional: Optional[Decimal]
-    estimated_maker_fee: Optional[Decimal]
-    estimated_taker_fee: Optional[Decimal]
-    fee_assumption: Optional[str]
+    fee_rate: Decimal
+    estimated_fee: Optional[Decimal]
     fee_status: str
+    fee_assumption: str
+    quote_source: Optional[QuoteSource]
+    quote_received_at: Optional[datetime]
+    quote_event_timestamp: Optional[datetime]
     validation: ValidationResult
     dry_run: bool
     prepared_at: datetime
+
+
+@dataclass(frozen=True)
+class FixedTradeSize:
+    symbol: str
+    quantity: Decimal
+
+
+@dataclass(frozen=True)
+class MarketDataConnectionStatus:
+    websocket_connected: bool
+    connecting: bool
+    reconnecting: bool
+    subscribed_symbols: tuple[str, ...]
+    last_message_received_at: Optional[datetime] = None
+    last_error: Optional[str] = None

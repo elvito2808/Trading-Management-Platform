@@ -1,3 +1,4 @@
+import asyncio
 import json
 from datetime import datetime, timezone
 from decimal import Decimal
@@ -12,17 +13,23 @@ from trading_platform.exchanges.errors import (
     ExchangeResponseError,
     ExchangeTimeoutError,
 )
+from trading_platform.exchanges.fee_policy import FixedFeePolicy, FIXED_TRADING_FEE_RATE
 from trading_platform.exchanges.kucoin import KuCoinClient, KuCoinConfig
-from trading_platform.exchanges.models import FeeFallback, FeeInfo
+from trading_platform.exchanges.kucoin_market_data import (
+    KuCoinMarketData,
+    KuCoinMarketDataConfig,
+)
+from trading_platform.exchanges.models import (
+    BestBidAskQuote,
+    FixedTradeSize,
+    QuoteFreshness,
+    QuoteSource,
+)
 
 
-def response(data=None, status=200, headers=None):
-    payload = {"code": "200000", "data": data}
-    return {
-        "status": status,
-        "headers": headers or {},
-        "body": json.dumps(payload).encode(),
-    }
+def response(data=None, status=200, headers=None, raw=None):
+    body = raw if raw is not None else json.dumps({"code": "200000", "data": data}).encode()
+    return {"status": status, "headers": headers or {}, "body": body}
 
 
 class FakeTransport:
@@ -51,113 +58,80 @@ SYMBOL = {
     "enableTrading": True,
 }
 
-
-def test_ticker_and_24h_parsing():
-    transport = FakeTransport([response({"ticker": [{
-        "symbol": "BNB-USDT", "last": "610.25", "buy": "610.20",
-        "sell": "610.30", "high": "620", "low": "600",
-        "changeRate": "0.012", "vol": "12345",
-    }]})])
-    client = KuCoinClient(transport=transport)
-    ticker = client.get_ticker("bnb-usdt")
-    assert ticker.price == Decimal("610.25")
-    assert ticker.bid == Decimal("610.20")
-    assert ticker.ask == Decimal("610.30")
-    assert ticker.spread == Decimal("0.10")
-    assert ticker.high_24h == Decimal("620")
+BBA = {
+    "bestBid": "610.2",
+    "bestBidSize": "1.25",
+    "bestAsk": "610.3",
+    "bestAskSize": "2.5",
+    "time": 1700000000000,
+}
 
 
-def test_multiple_trading_pairs_symbols():
-    transport = FakeTransport([response([SYMBOL, {**SYMBOL, "symbol": "BTC-USDT",
-                                               "baseCurrency": "BTC"}])])
+def test_symbols_and_increment_metadata():
+    transport = FakeTransport([response([SYMBOL, {**SYMBOL, "symbol": "BTC-USDT", "baseCurrency": "BTC"}])])
     symbols = KuCoinClient(transport=transport).get_symbols()
     assert {item.symbol for item in symbols} == {"BNB-USDT", "BTC-USDT"}
     assert "/api/v2/symbols" in transport.calls[0][1]
 
-
-def test_symbol_detail_and_precision():
-    transport = FakeTransport([response(SYMBOL)])
-    metadata = KuCoinClient(transport=transport).get_symbol("BNB-USDT")
-    assert metadata.base_min_size == Decimal("0.001")
-    assert metadata.quantity_increment == Decimal("0.001")
-    assert metadata.base_precision == 3
-    assert metadata.min_funds == Decimal("10")
-    assert "/api/v2/symbols/BNB-USDT" in transport.calls[0][1]
+    detail = KuCoinClient(transport=FakeTransport([response(SYMBOL)])).get_symbol("bnb-usdt")
+    assert detail.base_min_size == Decimal("0.001")
+    assert detail.quantity_increment == Decimal("0.001")
+    assert detail.base_precision == 3
+    assert detail.min_funds == Decimal("10")
+    assert detail.trading_enabled is True
 
 
-def test_quantity_increment_validation():
-    transport = FakeTransport([response(SYMBOL), response(SYMBOL)])
-    client = KuCoinClient(transport=transport)
-    # Preparing a limit at an explicit reference price avoids a ticker request.
-    valid = client.prepare_dry_run_order("BNB-USDT", "buy", "1.234", "limit", "610")
-    assert valid.validation.valid
-    invalid = client.prepare_dry_run_order("BNB-USDT", "buy", "1.2341", "limit", "610")
-    assert not invalid.validation.valid
-    assert any("baseIncrement" in error for error in invalid.validation.errors)
+def test_level1_endpoint_parses_quote_and_distinct_timestamps():
+    transport = FakeTransport([response(BBA)])
+    quote = KuCoinClient(transport=transport).get_best_bid_ask("bnb-usdt")
+    assert quote.best_bid == Decimal("610.2")
+    assert quote.bid_quantity == Decimal("1.25")
+    assert quote.best_ask == Decimal("610.3")
+    assert quote.ask_quantity == Decimal("2.5")
+    assert quote.spread == Decimal("0.1")
+    assert quote.source is QuoteSource.REST
+    assert quote.event_timestamp == datetime.fromtimestamp(1700000000, timezone.utc)
+    assert quote.received_at.tzinfo == timezone.utc
+    assert "/api/v1/market/orderbook/level1?symbol=BNB-USDT" in transport.calls[0][1]
+    assert all("level2" not in call[1] for call in transport.calls)
 
 
-def test_minimum_quantity_rejection():
-    transport = FakeTransport([response(SYMBOL)])
-    order = KuCoinClient(transport=transport).prepare_dry_run_order(
-        "BNB-USDT", "buy", "0.0001", "limit", "610"
-    )
-    assert not order.validation.valid
-    assert any("baseMinSize" in error for error in order.validation.errors)
+def test_exchange_event_timestamp_normalizes_seconds_milliseconds_and_nanoseconds():
+    expected = datetime.fromtimestamp(1700000000, timezone.utc)
+    for event_time in (1700000000, 1700000000000, 1700000000000000000):
+        quote = KuCoinClient.parse_websocket_quote(
+            "BNB-USDT", {**BBA, "time": event_time}
+        )
+        assert quote.event_timestamp == expected
 
 
-def test_unknown_symbol_is_rejected():
-    transport = FakeTransport([response([])])
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("bestBid", "NaN"),
+        ("bestBid", "Infinity"),
+        ("bestBidSize", "0"),
+        ("bestAsk", "-1"),
+        ("bestAskSize", "Infinity"),
+        ("bestAsk", "610.2"),
+    ],
+)
+def test_invalid_level1_quote_values_are_rejected(field, value):
+    data = {**BBA, field: value}
     with pytest.raises(ExchangeResponseError):
-        KuCoinClient(transport=transport).get_symbol("")
+        KuCoinClient(transport=FakeTransport([response(data)])).get_best_bid_ask("BNB-USDT")
 
 
-def test_order_book_parsing():
-    transport = FakeTransport([response({
-        "sequence": 1234,
-        "bids": [["610.1", "1.2"], ["610.0", "2"]],
-        "asks": [["610.2", "0.5"]],
-    })])
-    book = KuCoinClient(transport=transport).get_order_book("BNB-USDT")
-    assert book.sequence == 1234
-    assert book.snapshot is True
-    assert book.bids[0].price == Decimal("610.1")
-    assert book.asks[0].quantity == Decimal("0.5")
-    assert book.event_timestamp is None
-    assert book.retrieved_at.tzinfo == timezone.utc
-
-
-def test_order_book_exchange_event_timestamp_is_preserved():
-    transport = FakeTransport([response({
-        "time": 1700000000000,
-        "sequence": 1234,
-        "bids": [["610.1", "1.2"]],
-        "asks": [["610.2", "0.5"]],
-    })])
-    book = KuCoinClient(transport=transport).get_order_book("BNB-USDT")
-    assert book.event_timestamp == datetime.fromtimestamp(1700000000, timezone.utc)
-
-
-def test_malformed_or_empty_order_book():
-    transport = FakeTransport([response({"bids": None, "asks": []})])
+def test_missing_level1_fields_and_invalid_websocket_quote_are_rejected():
     with pytest.raises(ExchangeResponseError):
-        KuCoinClient(transport=transport).get_order_book("BNB-USDT")
-
-
-def test_missing_ticker_data():
-    transport = FakeTransport([response({"ticker": []})])
+        KuCoinClient(transport=FakeTransport([response({"bestBid": "1"})])).get_best_bid_ask("BNB-USDT")
     with pytest.raises(ExchangeResponseError):
-        KuCoinClient(transport=transport).get_ticker("BNB-USDT")
+        KuCoinClient.parse_websocket_quote("BNB-USDT", {"bestBid": "NaN"})
 
 
-def test_malformed_ticker_item_is_reported():
-    transport = FakeTransport([response({"ticker": [None]})])
-    with pytest.raises(ExchangeResponseError):
-        KuCoinClient(transport=transport).get_ticker("BNB-USDT")
-
-
-def test_balance_parsing_available_hold_and_type():
+def test_balance_fields_are_finite_nonnegative_and_consistent():
     transport = FakeTransport([response([
-        {"currency": "BNB", "balance": "2.500", "available": "2.0", "holds": "0.5", "type": "trade"},
+        {"currency": "BNB", "balance": "2.5", "available": "2", "holds": "0.5", "type": "trade"},
         {"currency": "USDT", "balance": "100", "available": "100", "holds": "0", "type": "main"},
     ])])
     balances = KuCoinClient(
@@ -166,168 +140,306 @@ def test_balance_parsing_available_hold_and_type():
         api_secret="dummy-secret",
         api_passphrase="dummy-pass",
     ).get_balances()
-    assert balances[0].available == Decimal("2.0")
+    assert balances[0].available == Decimal("2")
     assert balances[0].hold == Decimal("0.5")
-    assert balances[0].account_type == "trade"
+    assert balances[0].total == Decimal("2.5")
+    assert balances[0].retrieved_at.tzinfo == timezone.utc
 
 
-def test_empty_balances():
-    transport = FakeTransport([response([])])
-    balances = KuCoinClient(
-        transport=transport,
-        api_key="dummy",
-        api_secret="dummy-secret",
-        api_passphrase="dummy-pass",
-    ).get_balances()
-    assert balances == []
-
-
-def test_balance_authentication_failure():
-    transport = FakeTransport([response(None, status=401)])
-    with pytest.raises(ExchangeAuthenticationError):
-        KuCoinClient(
-            transport=transport,
-            api_key="dummy",
-            api_secret="dummy-secret",
-            api_passphrase="dummy-pass",
-        ).get_balances()
-
-
-def test_live_pair_fee_maker_taker_and_exact_symbol_selection():
-    transport = FakeTransport([response([
-        {"symbol": "BTC-USDT", "makerFeeRate": "0.0008", "takerFeeRate": "0.001"},
-        {"symbol": "BNB-USDT", "makerFeeRate": "0.001", "takerFeeRate": "0.0015"},
-    ])])
-    fee = KuCoinClient(
-        transport=transport,
-        api_key="dummy",
-        api_secret="dummy-secret",
-        api_passphrase="dummy-pass",
-    ).get_fees("BNB-USDT")
-    assert fee.status == "live"
-    assert fee.maker_rate == Decimal("0.001")
-    assert fee.taker_rate == Decimal("0.0015")
-    assert "GET" == transport.calls[0][0]
-    assert "/api/v1/trade-fees?symbols=BNB-USDT" in transport.calls[0][1]
-
-
-def test_configured_fee_fallback_is_explicit():
-    transport = FakeTransport([response(None, status=401)])
-    fallback = FeeFallback(
-        exchange="kucoin", symbol="BNB-USDT", maker_rate=Decimal("0.001"),
-        taker_rate=Decimal("0.001"), source="operator configured", verified=False,
-    )
+@pytest.mark.parametrize(
+    "balance",
+    [
+        {"currency": "BNB", "balance": "1", "available": "0.5", "holds": "0.4", "type": "trade"},
+        {"currency": "BNB", "balance": "NaN", "available": "1", "holds": "0", "type": "trade"},
+        {"currency": "BNB", "balance": "-1", "available": "-1", "holds": "0", "type": "trade"},
+        {"currency": "BNB", "available": "1", "holds": "0", "type": "trade"},
+    ],
+)
+def test_inconsistent_or_invalid_balances_are_rejected(balance):
     client = KuCoinClient(
-        config=KuCoinConfig(fee_fallback_enabled=True, fee_fallback=fallback),
-        transport=transport,
+        transport=FakeTransport([response([balance])]),
         api_key="dummy",
         api_secret="dummy-secret",
         api_passphrase="dummy-pass",
     )
-    fee = client.get_fees("BNB-USDT")
-    assert fee.status == "fallback"
-    assert fee.maker_rate == Decimal("0.001")
-    assert fee.warning
-    assert "/api/v1/trade-fees" in transport.calls[0][1]
-
-
-def test_fee_fallback_disabled_has_unavailable_status():
-    transport = FakeTransport([response(None, status=401)])
-    fee = KuCoinClient(
-        transport=transport,
-        api_key="dummy",
-        api_secret="dummy-secret",
-        api_passphrase="dummy-pass",
-    ).get_fees("BNB-USDT")
-    assert fee.status == "unavailable"
-    assert fee.maker_rate is None
-    assert fee.taker_rate is None
-
-
-def test_fee_fallback_is_used_for_network_failure_only_when_enabled():
-    fallback = FeeFallback(
-        exchange="kucoin", symbol="BNB-USDT", maker_rate=Decimal("0.001"),
-        taker_rate=Decimal("0.002"), source="operator configured", verified=False,
-    )
-    enabled_transport = FakeTransport([ExchangeNetworkError("offline")] * 4)
-    enabled_client = KuCoinClient(
-        config=KuCoinConfig(max_retries=3, fee_fallback_enabled=True, fee_fallback=fallback),
-        transport=enabled_transport,
-        api_key="dummy",
-        api_secret="dummy-secret",
-        api_passphrase="dummy-pass",
-        sleeper=lambda _: None,
-    )
-    assert enabled_client.get_fees("BNB-USDT").status == "fallback"
-
-    disabled_transport = FakeTransport([ExchangeTimeoutError("timeout")] * 4)
-    disabled_client = KuCoinClient(
-        config=KuCoinConfig(max_retries=3, fee_fallback=fallback),
-        transport=disabled_transport,
-        api_key="dummy",
-        api_secret="dummy-secret",
-        api_passphrase="dummy-pass",
-        sleeper=lambda _: None,
-    )
-    assert disabled_client.get_fees("BNB-USDT").status == "unavailable"
-
-
-def test_invalid_live_fee_rate_is_not_accepted():
-    transport = FakeTransport([response([{
-        "symbol": "BNB-USDT", "makerFeeRate": "-0.001", "takerFeeRate": "0.001"
-    }])])
-    fee = KuCoinClient(
-        transport=transport,
-        api_key="dummy",
-        api_secret="dummy-secret",
-        api_passphrase="dummy-pass",
-    ).get_fees("BNB-USDT")
-    assert fee.status == "unavailable"
-    assert fee.maker_rate is None
-
-
-def test_fee_fallback_for_different_symbol_is_not_applied():
-    transport = FakeTransport([response(None, status=401)])
-    fallback = FeeFallback(
-        exchange="kucoin", symbol="BTC-USDT", maker_rate=Decimal("0.001"),
-        taker_rate=Decimal("0.002"), source="BTC-only fallback", verified=False,
-    )
-    fee = KuCoinClient(
-        config=KuCoinConfig(fee_fallback_enabled=True, fee_fallback=fallback),
-        transport=transport,
-        api_key="dummy",
-        api_secret="dummy-secret",
-        api_passphrase="dummy-pass",
-    ).get_fees("BNB-USDT")
-    assert fee.status == "unavailable"
-    assert fee.maker_rate is None
-    assert "does not match" in fee.warning
-
-
-def test_unexpected_programming_error_is_not_converted_to_fee_fallback():
-    transport = FakeTransport([RuntimeError("programming fault")])
-    fallback = FeeFallback(
-        exchange="kucoin", symbol="BNB-USDT", maker_rate=Decimal("0.001"),
-        taker_rate=Decimal("0.002"), source="configured", verified=False,
-    )
-    client = KuCoinClient(
-        config=KuCoinConfig(fee_fallback_enabled=True, fee_fallback=fallback),
-        transport=transport,
-        api_key="dummy",
-        api_secret="dummy-secret",
-        api_passphrase="dummy-pass",
-    )
-    with pytest.raises(RuntimeError, match="programming fault"):
-        client.get_fees("BNB-USDT")
-
-
-def test_malformed_symbol_increment_is_rejected():
-    transport = FakeTransport([response({**SYMBOL, "baseIncrement": "NaN"})])
     with pytest.raises(ExchangeResponseError):
-        KuCoinClient(transport=transport).get_symbol("BNB-USDT")
+        client.get_balances()
 
 
-def test_dummy_signature_and_private_headers():
+def test_empty_balances_and_read_only_authentication():
+    client = KuCoinClient(
+        transport=FakeTransport([response([])]),
+        api_key="dummy",
+        api_secret="dummy-secret",
+        api_passphrase="dummy-pass",
+    )
+    assert client.get_balances() == []
+    with pytest.raises(ExchangeAuthenticationError):
+        KuCoinClient(transport=FakeTransport([])).get_balances()
+
+
+@pytest.mark.parametrize(("side", "order_type", "assumption"), [
+    ("buy", "market", None),
+    ("sell", "limit", "maker"),
+])
+def test_fixed_fee_is_decimal_and_applied_once_for_each_direction(side, order_type, assumption):
+    transport = FakeTransport([response(SYMBOL)])
+    client = KuCoinClient(transport=transport)
+    order = client.prepare_dry_run_order(
+        "BNB-USDT", side, "2", order_type, "610", fee_assumption=assumption
+    )
+    assert order.validation.valid
+    assert order.estimated_notional == Decimal("1220")
+    assert order.fee_rate == Decimal("0.001")
+    assert order.estimated_fee == Decimal("1.220")
+    assert order.fee_status == "fixed-assumption"
+    assert order.fee_assumption == ("taker" if order_type == "market" else "maker")
+    assert all("trade-fees" not in call[1] for call in transport.calls)
+
+
+def test_fixed_fee_policy_is_shared_and_rejects_bad_rates():
+    assert FIXED_TRADING_FEE_RATE == Decimal("0.001")
+    assert FixedFeePolicy().estimate(Decimal("100")) == Decimal("0.100")
+    for rate in (Decimal("NaN"), Decimal("Infinity"), Decimal("-0.001")):
+        with pytest.raises(ValueError):
+            FixedFeePolicy(rate)
+
+
+def test_market_order_cannot_use_maker_assumption():
+    order = KuCoinClient(transport=FakeTransport([response(SYMBOL)])).prepare_dry_run_order(
+        "BNB-USDT", "buy", "2", "market", "610", fee_assumption="maker"
+    )
+    assert not order.validation.valid
+    assert "market orders cannot use the maker fee assumption" in order.validation.errors
+    assert order.fee_assumption == "taker"
+
+
+def test_invalid_fee_assumption_is_not_silently_accepted():
+    order = KuCoinClient(transport=FakeTransport([response(SYMBOL)])).prepare_dry_run_order(
+        "BNB-USDT", "buy", "2", "market", "610", fee_assumption="unknown"
+    )
+    assert not order.validation.valid
+    assert "fee assumption must be maker or taker" in order.validation.errors
+    assert order.fee_assumption == "taker"
+
+
+@pytest.mark.parametrize("quantity", ["NaN", "Infinity", "-Infinity"])
+def test_dry_run_rejects_non_finite_quantities_before_calculation(quantity):
+    order = KuCoinClient(transport=FakeTransport([response(SYMBOL)])).prepare_dry_run_order(
+        "BNB-USDT", "buy", quantity, "limit", "610"
+    )
+    assert not order.validation.valid
+    assert "quantity must be finite" in order.validation.errors
+    assert order.estimated_notional is None
+
+
+@pytest.mark.parametrize("price", ["NaN", "Infinity", "-Infinity"])
+def test_dry_run_rejects_non_finite_prices_before_calculation(price):
+    order = KuCoinClient(transport=FakeTransport([response(SYMBOL)])).prepare_dry_run_order(
+        "BNB-USDT", "buy", "1", "limit", price
+    )
+    assert not order.validation.valid
+    assert "reference price must be finite" in order.validation.errors
+    assert order.estimated_notional is None
+
+
+@pytest.mark.parametrize(("quantity", "price", "expected_error"), [
+    ("0", "610", "quantity must be positive"),
+    ("-1", "610", "quantity must be positive"),
+    ("1", "0", "reference price must be positive"),
+    ("1", "-1", "reference price must be positive"),
+])
+def test_dry_run_rejects_non_positive_quantity_or_price(quantity, price, expected_error):
+    order = KuCoinClient(transport=FakeTransport([response(SYMBOL)])).prepare_dry_run_order(
+        "BNB-USDT", "buy", quantity, "limit", price
+    )
+    assert expected_error in order.validation.errors
+    assert order.estimated_notional is None
+
+
+def test_quantity_increment_minimum_maximum_price_increment_and_min_funds():
+    client = KuCoinClient(transport=FakeTransport([response(SYMBOL)] * 5))
+    increment = client.prepare_dry_run_order("BNB-USDT", "buy", "1.0001", "limit", "610")
+    minimum = client.prepare_dry_run_order("BNB-USDT", "buy", "0.0001", "limit", "610")
+    maximum = client.prepare_dry_run_order("BNB-USDT", "buy", "100.001", "limit", "610")
+    price = client.prepare_dry_run_order("BNB-USDT", "buy", "1", "limit", "610.01")
+    funds = client.prepare_dry_run_order("BNB-USDT", "buy", "0.01", "limit", "610")
+    assert "quantity does not match baseIncrement" in increment.validation.errors
+    assert "quantity is below baseMinSize" in minimum.validation.errors
+    assert "quantity exceeds baseMaxSize" in maximum.validation.errors
+    assert "reference price does not match priceIncrement" in price.validation.errors
+    assert "notional is below minFunds" in funds.validation.errors
+
+
+def test_dry_run_rejects_disabled_or_unknown_trading_status():
+    disabled = KuCoinClient(transport=FakeTransport([
+        response({**SYMBOL, "enableTrading": False}),
+        response({**SYMBOL, "enableTrading": None}),
+    ]))
+    for _ in range(2):
+        order = disabled.prepare_dry_run_order("BNB-USDT", "buy", "1", "limit", "610")
+        assert "symbol is not enabled for trading" in order.validation.errors
+
+
+def test_order_constraint_boundaries_are_inclusive():
+    client = KuCoinClient(transport=FakeTransport([response(SYMBOL)] * 2))
+    at_minimum = client.prepare_dry_run_order("BNB-USDT", "buy", "0.1", "limit", "100")
+    at_maximum = client.prepare_dry_run_order("BNB-USDT", "sell", "100", "limit", "0.1")
+    assert at_minimum.validation.valid
+    assert at_maximum.validation.valid
+
+
+def test_configured_fixed_size_uses_bba_side_price_without_rounding():
+    transport = FakeTransport([response(SYMBOL), response(SYMBOL)])
+    client = KuCoinClient(transport=transport)
+    quote = KuCoinClient.parse_websocket_quote("BNB-USDT", BBA)
+    buy = client.prepare_configured_dry_run_order(
+        FixedTradeSize("BNB-USDT", Decimal("1.2375")), "buy", quote
+    )
+    sell = client.prepare_configured_dry_run_order(
+        FixedTradeSize("BNB-USDT", Decimal("1.2375")), "sell", quote
+    )
+    assert buy.quantity == Decimal("1.2375")
+    assert buy.reference_price == Decimal("610.3")
+    assert sell.reference_price == Decimal("610.2")
+    assert buy.quote_source is QuoteSource.WEBSOCKET
+    assert buy.quote_event_timestamp == quote.event_timestamp
+    assert "quantity does not match baseIncrement" in buy.validation.errors
+    assert len(transport.calls) == 2
+    assert all("trade-fees" not in call[1] for call in transport.calls)
+
+
+def test_invalid_symbol_minimum_and_maximum_metadata_is_rejected():
+    malformed = {**SYMBOL, "baseMinSize": "101", "baseMaxSize": "100"}
+    with pytest.raises(ExchangeResponseError, match="minimum quantity exceeds maximum"):
+        KuCoinClient(transport=FakeTransport([response(malformed)])).get_symbol("BNB-USDT")
+
+
+def test_dry_run_requires_explicit_price_and_never_fetches_quote_or_fee():
+    transport = FakeTransport([])
+    with pytest.raises(ExchangeResponseError, match="explicit reference price"):
+        KuCoinClient(transport=transport).prepare_dry_run_order("BNB-USDT", "buy", "1")
+    assert transport.calls == []
+
+
+def test_stale_or_wrong_symbol_quote_invalidates_configured_dry_run():
+    client = KuCoinClient(transport=FakeTransport([response(SYMBOL), response(SYMBOL)]))
+    quote = KuCoinClient.parse_websocket_quote("BNB-USDT", BBA)
+    stale = BestBidAskQuote(
+        **{**quote.__dict__, "freshness": QuoteFreshness.STALE}
+    )
+    stale_order = client.prepare_configured_dry_run_order(
+        FixedTradeSize("BNB-USDT", Decimal("1")), "buy", stale
+    )
+    wrong = KuCoinClient.parse_websocket_quote("BTC-USDT", BBA)
+    wrong_order = client.prepare_configured_dry_run_order(
+        FixedTradeSize("BNB-USDT", Decimal("1")), "buy", wrong
+    )
+    assert "Best Bid/Ask quote is stale" in stale_order.validation.errors
+    assert "quote symbol does not match order symbol" in wrong_order.validation.errors
+
+
+def test_dry_run_rejects_quote_from_another_exchange_or_with_invalid_book():
+    client = KuCoinClient(transport=FakeTransport([response(SYMBOL), response(SYMBOL)]))
+    quote = KuCoinClient.parse_websocket_quote("BNB-USDT", BBA)
+    wrong_exchange = BestBidAskQuote(
+        **{**quote.__dict__, "exchange": "other"}
+    )
+    crossed = BestBidAskQuote(
+        **{**quote.__dict__, "best_ask": Decimal("610.2")}
+    )
+    wrong_order = client.prepare_configured_dry_run_order(
+        FixedTradeSize("BNB-USDT", Decimal("1")), "buy", wrong_exchange
+    )
+    crossed_order = client.prepare_configured_dry_run_order(
+        FixedTradeSize("BNB-USDT", Decimal("1")), "buy", crossed
+    )
+    assert "quote exchange does not match order exchange" in wrong_order.validation.errors
+    assert "Best Bid must be lower than Best Ask" in crossed_order.validation.errors
+
+
+def test_public_websocket_token_response_is_validated():
+    token_data = {
+        "token": "test-token",
+        "instanceServers": [{
+            "endpoint": "wss://example.test/endpoint",
+            "pingInterval": 18000,
+            "pingTimeout": 10000,
+        }],
+    }
+    token = KuCoinClient(transport=FakeTransport([response(token_data)])).get_public_ws_token()
+    assert token == {
+        "token": "test-token",
+        "endpoint": "wss://example.test/endpoint",
+        "ping_interval": 18.0,
+        "ping_timeout": 10.0,
+    }
+    malformed = {"token": "token", "instanceServers": [{"endpoint": "ws://insecure"}]}
+    with pytest.raises(ExchangeResponseError):
+        KuCoinClient(transport=FakeTransport([response(malformed)])).get_public_ws_token()
+
+
+def test_retry_after_malformed_and_non_json_rate_limit_are_safe():
+    sleeps = []
+    transport = FakeTransport([
+        response(status=429, headers={"Retry-After": "not-a-number"}, raw=b"not json"),
+        response(SYMBOL),
+    ])
+    client = KuCoinClient(transport=transport, sleeper=sleeps.append)
+    assert client.get_symbol("BNB-USDT").symbol == "BNB-USDT"
+    assert sleeps == [0.5]
+
+
+def test_retry_after_http_date_is_supported():
+    sleeps = []
+    transport = FakeTransport([
+        response(status=429, headers={"Retry-After": "Wed, 21 Oct 2037 07:28:00 GMT"}),
+        response(SYMBOL),
+    ])
+    client = KuCoinClient(transport=transport, sleeper=sleeps.append)
+    client.get_symbol("BNB-USDT")
+    assert len(sleeps) == 1
+    assert sleeps[0] > 0
+
+
+def test_retry_after_is_capped_to_configured_bound():
+    sleeps = []
+    client = KuCoinClient(
+        config=KuCoinConfig(max_retries=1, retry_after_max_seconds=3),
+        transport=FakeTransport([
+            response(status=429, headers={"Retry-After": "1000"}),
+            response(SYMBOL),
+        ]),
+        sleeper=sleeps.append,
+    )
+    client.get_symbol("BNB-USDT")
+    assert sleeps == [3]
+
+
+def test_timeout_and_network_failures_use_bounded_retries():
+    client = KuCoinClient(
+        config=KuCoinConfig(max_retries=1),
+        transport=FakeTransport([ExchangeTimeoutError("timeout")] * 2),
+        sleeper=lambda _: None,
+    )
+    with pytest.raises(ExchangeTimeoutError):
+        client.get_symbol("BNB-USDT")
+    client = KuCoinClient(
+        config=KuCoinConfig(max_retries=1),
+        transport=FakeTransport([ExchangeNetworkError("offline")] * 2),
+        sleeper=lambda _: None,
+    )
+    with pytest.raises(ExchangeNetworkError):
+        client.get_symbol("BNB-USDT")
+
+
+def test_unexpected_programming_errors_are_not_hidden():
+    client = KuCoinClient(transport=FakeTransport([RuntimeError("programming fault")]))
+    with pytest.raises(RuntimeError, match="programming fault"):
+        client.get_symbol("BNB-USDT")
+
+
+def test_private_balance_access_requires_credentials_and_signs_read_request():
     transport = FakeTransport([response([])])
     client = KuCoinClient(
         transport=transport,
@@ -337,279 +449,261 @@ def test_dummy_signature_and_private_headers():
         clock=lambda: 1700000000,
     )
     signature, passphrase = client.sign("1700000000000", "GET", "/api/v1/accounts", "")
-    assert isinstance(signature, str)
-    assert isinstance(passphrase, str)
+    assert signature and passphrase
     client.get_balances()
     headers = transport.calls[0][2]
     assert headers["KC-API-KEY"] == "dummy-key"
     assert "KC-API-SIGN" in headers
     assert "KC-API-PASSPHRASE" in headers
+    assert "/api/v1/accounts" in transport.calls[0][1]
 
 
-def test_private_request_without_credentials_does_not_call_transport():
-    transport = FakeTransport([])
-    client = KuCoinClient(transport=transport)
-    with pytest.raises(ExchangeAuthenticationError):
-        client.get_balances()
-    assert transport.calls == []
+class FakeWebSocket:
+    def __init__(self, active_counts, ack_error=False):
+        self.incoming = asyncio.Queue()
+        self.sent = []
+        self.active_counts = active_counts
+        self.ack_error = ack_error
+        self.closed = False
+
+    async def __aenter__(self):
+        self.active_counts["active"] += 1
+        self.active_counts["maximum"] = max(
+            self.active_counts["maximum"], self.active_counts["active"]
+        )
+        await self.incoming.put(json.dumps({"type": "welcome"}))
+        return self
+
+    async def __aexit__(self, exc_type, exc, traceback):
+        self.active_counts["active"] -= 1
+        self.closed = True
+
+    async def recv(self):
+        value = await self.incoming.get()
+        if isinstance(value, Exception):
+            raise value
+        return value
+
+    async def send(self, raw):
+        message = json.loads(raw)
+        self.sent.append(message)
+        if message["type"] == "subscribe":
+            await self.incoming.put(json.dumps({
+                "type": "error" if self.ack_error else "ack",
+                "id": message["id"],
+            }))
+        elif message["type"] == "ping":
+            await self.incoming.put(json.dumps({"type": "pong", "id": message["id"]}))
+
+    async def close(self):
+        self.closed = True
+
+    async def publish(self, message):
+        await self.incoming.put(json.dumps(message))
 
 
-def test_dry_run_is_explicit_and_submits_nothing():
-    transport = FakeTransport([response(SYMBOL)])
-    client = KuCoinClient(transport=transport)
-    order = client.prepare_dry_run_order("BNB-USDT", "buy", "1.000", "limit", "610")
-    assert order.dry_run is True
-    assert order.estimated_notional == Decimal("610.000")
-    assert all("/api/v1/orders" not in call[1] for call in transport.calls)
+class FakeWebSocketContext:
+    def __init__(self, websocket):
+        self.websocket = websocket
+
+    async def __aenter__(self):
+        return await self.websocket.__aenter__()
+
+    async def __aexit__(self, exc_type, exc, traceback):
+        return await self.websocket.__aexit__(exc_type, exc, traceback)
 
 
-def make_fee_info(symbol="BNB-USDT", maker="0.001", taker="0.002", status="live"):
-    return FeeInfo(
-        exchange="kucoin",
-        symbol=symbol,
-        maker_rate=Decimal(maker) if maker is not None else None,
-        taker_rate=Decimal(taker) if taker is not None else None,
-        source="fixture",
-        status=status,
-        retrieved_at=datetime.now(timezone.utc),
-    )
+async def wait_until(predicate, timeout=1.0):
+    deadline = asyncio.get_running_loop().time() + timeout
+    while asyncio.get_running_loop().time() < deadline:
+        if predicate():
+            return
+        await asyncio.sleep(0.005)
+    raise AssertionError("condition was not reached before timeout")
 
 
-def test_dry_run_uses_supplied_fees_without_private_fee_request():
-    transport = FakeTransport([response(SYMBOL)])
-    order = KuCoinClient(transport=transport).prepare_dry_run_order(
-        "BNB-USDT", "buy", "2", "limit", "610",
-        fee_info=make_fee_info(), fee_assumption="maker",
-    )
-    assert order.validation.valid
-    assert order.estimated_maker_fee == Decimal("1.220")
-    assert order.estimated_taker_fee == Decimal("2.440")
-    assert order.fee_assumption == "maker"
-    assert order.fee_status == "live"
-    assert all("/api/v1/trade-fees" not in call[1] for call in transport.calls)
+def run_async(awaitable):
+    return asyncio.run(awaitable)
 
 
-def test_dry_run_market_order_uses_taker_assumption_only():
-    transport = FakeTransport([response(SYMBOL)])
-    order = KuCoinClient(transport=transport).prepare_dry_run_order(
-        "BNB-USDT", "buy", "2", "market", "610",
-        fee_info=make_fee_info(), fee_assumption="maker",
-    )
-    assert not order.validation.valid
-    assert "market orders cannot use the maker fee assumption" in order.validation.errors
-    assert order.fee_assumption == "taker"
-    assert order.estimated_maker_fee is None
+def test_websocket_first_feed_subscribes_once_and_publishes_bba():
+    async def scenario():
+        client = KuCoinClient(transport=FakeTransport([response(BBA)]))
+        counts = {"active": 0, "maximum": 0, "connects": 0}
+        sockets = []
+
+        def connector(url, **kwargs):
+            assert "token=test-token" in url
+            counts["connects"] += 1
+            socket = FakeWebSocket(counts)
+            sockets.append(socket)
+            return FakeWebSocketContext(socket)
+
+        feed = KuCoinMarketData(
+            client,
+            ["BNB-USDT", "BNB-USDT"],
+            token_provider=lambda: {
+                "token": "test-token",
+                "endpoint": "wss://example.test/endpoint",
+                "ping_interval": 0.02,
+                "ping_timeout": 0.05,
+            },
+            websocket_connect=connector,
+            config=KuCoinMarketDataConfig(rest_poll_interval_seconds=100),
+        )
+        await feed.start()
+        await feed.start()
+        await wait_until(lambda: feed.connection_status.websocket_connected)
+        assert counts["connects"] == 1
+        assert counts["maximum"] == 1
+        assert len(sockets[0].sent) == 1
+        assert sockets[0].sent[0]["topic"] == "/market/ticker:BNB-USDT"
+        await sockets[0].publish({
+            "type": "message",
+            "topic": "/market/ticker:BNB-USDT",
+            "data": BBA,
+        })
+        await wait_until(lambda: feed.connection_status.last_message_received_at is not None)
+        await wait_until(lambda: any(message["type"] == "ping" for message in sockets[0].sent))
+        quote = await feed.get_quote("BNB-USDT")
+        assert quote.source is QuoteSource.WEBSOCKET
+        assert quote.freshness is QuoteFreshness.FRESH
+        await feed.close()
+        assert counts["active"] == 0
+        assert not feed.connection_status.websocket_connected
+
+    run_async(scenario())
 
 
-def test_dry_run_market_order_estimates_taker_fee():
-    transport = FakeTransport([response(SYMBOL)])
-    order = KuCoinClient(transport=transport).prepare_dry_run_order(
-        "BNB-USDT", "buy", "2", "market", "610", fee_info=make_fee_info()
-    )
-    assert order.validation.valid
-    assert order.fee_assumption == "taker"
-    assert order.estimated_maker_fee is None
-    assert order.estimated_taker_fee == Decimal("2.440")
+def test_stale_websocket_quote_falls_back_to_rest_then_recovers():
+    async def scenario():
+        clock = [10.0]
+        client = KuCoinClient(transport=FakeTransport([response(BBA)]))
+        counts = {"active": 0, "maximum": 0}
+        sockets = []
+
+        def connector(url, **kwargs):
+            socket = FakeWebSocket(counts)
+            sockets.append(socket)
+            return FakeWebSocketContext(socket)
+
+        feed = KuCoinMarketData(
+            client,
+            ["BNB-USDT"],
+            token_provider=lambda: {
+                "token": "test-token",
+                "endpoint": "wss://example.test/endpoint",
+                "ping_interval": 10,
+                "ping_timeout": 5,
+            },
+            websocket_connect=connector,
+            monotonic=lambda: clock[0],
+            config=KuCoinMarketDataConfig(
+                max_quote_age_seconds=0.5,
+                websocket_initial_wait_seconds=100,
+                rest_poll_interval_seconds=100,
+            ),
+        )
+        await feed.start()
+        await wait_until(lambda: feed.connection_status.websocket_connected)
+        await sockets[0].publish({
+            "type": "message",
+            "topic": "/market/ticker:BNB-USDT",
+            "data": BBA,
+        })
+        await wait_until(lambda: feed.connection_status.last_message_received_at is not None)
+        websocket_quote = await feed.get_quote("BNB-USDT")
+        assert websocket_quote.source is QuoteSource.WEBSOCKET
+        clock[0] += 1
+        rest_quote = await feed.get_quote("BNB-USDT")
+        assert rest_quote.source is QuoteSource.REST
+        assert rest_quote.freshness is QuoteFreshness.FRESH
+        await sockets[0].publish({
+            "type": "message",
+            "topic": "/market/ticker:BNB-USDT",
+            "data": BBA,
+        })
+        await wait_until(lambda: feed._current_quote("BNB-USDT").source is QuoteSource.WEBSOCKET)
+        await feed.close()
+
+    run_async(scenario())
 
 
-def test_dry_run_fee_data_unavailable_is_explicit():
-    transport = FakeTransport([response(SYMBOL)])
-    order = KuCoinClient(transport=transport).prepare_dry_run_order(
-        "BNB-USDT", "buy", "2", "market", "610",
-        fee_info=make_fee_info(maker=None, taker=None, status="unavailable"),
-    )
-    assert order.fee_status == "unavailable"
-    assert order.estimated_maker_fee is None
-    assert order.estimated_taker_fee is None
+def test_rest_quote_fallback_and_stale_status_are_explicit():
+    async def scenario():
+        clock = [10.0]
+        client = KuCoinClient(transport=FakeTransport([response(BBA), response(BBA)]))
+        feed = KuCoinMarketData(
+            client,
+            ["BNB-USDT"],
+            monotonic=lambda: clock[0],
+            config=KuCoinMarketDataConfig(
+                max_quote_age_seconds=1,
+                rest_min_request_interval_seconds=0.01,
+            ),
+        )
+        quote = await feed.get_quote("BNB-USDT")
+        assert quote.source is QuoteSource.REST
+        assert quote.freshness is QuoteFreshness.FRESH
+        clock[0] += 2
+        assert feed._current_quote("BNB-USDT").freshness is QuoteFreshness.STALE
+        fresh_again = await feed.get_quote("BNB-USDT")
+        assert fresh_again.freshness is QuoteFreshness.FRESH
+
+    run_async(scenario())
 
 
-@pytest.mark.parametrize("quantity", ["NaN", "Infinity", "-Infinity"])
-def test_dry_run_rejects_non_finite_quantities(quantity):
-    transport = FakeTransport([response(SYMBOL)])
-    order = KuCoinClient(transport=transport).prepare_dry_run_order(
-        "BNB-USDT", "buy", quantity, "limit", "610"
-    )
-    assert not order.validation.valid
-    assert "quantity must be finite" in order.validation.errors
-    assert order.estimated_notional is None
+def test_websocket_subscription_failure_reconnects_with_single_active_connection():
+    async def scenario():
+        client = KuCoinClient(transport=FakeTransport([response(BBA)]))
+        counts = {"active": 0, "maximum": 0, "connects": 0}
+
+        def connector(url, **kwargs):
+            counts["connects"] += 1
+            return FakeWebSocketContext(FakeWebSocket(
+                counts, ack_error=counts["connects"] == 1
+            ))
+
+        feed = KuCoinMarketData(
+            client,
+            ["BNB-USDT"],
+            token_provider=lambda: {
+                "token": "test-token",
+                "endpoint": "wss://example.test/endpoint",
+                "ping_interval": 10,
+                "ping_timeout": 5,
+            },
+            websocket_connect=connector,
+            config=KuCoinMarketDataConfig(
+                reconnect_initial_seconds=0.01,
+                reconnect_max_seconds=0.02,
+                rest_poll_interval_seconds=100,
+                rest_min_request_interval_seconds=0.01,
+            ),
+        )
+        await feed.start()
+        await wait_until(lambda: feed.connection_status.websocket_connected)
+        assert counts["connects"] >= 2
+        assert counts["maximum"] == 1
+        await feed.close()
+
+    run_async(scenario())
 
 
-@pytest.mark.parametrize("quantity", ["0", "-1"])
-def test_dry_run_rejects_non_positive_quantities(quantity):
-    transport = FakeTransport([response(SYMBOL)])
-    order = KuCoinClient(transport=transport).prepare_dry_run_order(
-        "BNB-USDT", "buy", quantity, "limit", "610"
-    )
-    assert not order.validation.valid
-    assert "quantity must be positive" in order.validation.errors
+def test_websocket_feed_rejects_unconfigured_symbol():
+    async def scenario():
+        feed = KuCoinMarketData(KuCoinClient(transport=FakeTransport([])), ["BNB-USDT"])
+        with pytest.raises(ExchangeResponseError, match="not configured"):
+            await feed.get_quote("BTC-USDT")
+
+    run_async(scenario())
 
 
-@pytest.mark.parametrize("price", ["NaN", "Infinity", "-Infinity"])
-def test_dry_run_rejects_non_finite_reference_prices(price):
-    transport = FakeTransport([response(SYMBOL)])
-    order = KuCoinClient(transport=transport).prepare_dry_run_order(
-        "BNB-USDT", "buy", "1", "limit", price
-    )
-    assert not order.validation.valid
-    assert "reference price must be finite" in order.validation.errors
-    assert order.estimated_notional is None
-
-
-@pytest.mark.parametrize("price", ["0", "-1"])
-def test_dry_run_rejects_non_positive_reference_prices(price):
-    transport = FakeTransport([response(SYMBOL)])
-    order = KuCoinClient(transport=transport).prepare_dry_run_order(
-        "BNB-USDT", "buy", "1", "limit", price
-    )
-    assert not order.validation.valid
-    assert "reference price must be positive" in order.validation.errors
-
-
-def test_dry_run_rejects_quantity_above_maximum():
-    transport = FakeTransport([response(SYMBOL)])
-    order = KuCoinClient(transport=transport).prepare_dry_run_order(
-        "BNB-USDT", "buy", "100.001", "limit", "610"
-    )
-    assert not order.validation.valid
-    assert "quantity exceeds baseMaxSize" in order.validation.errors
-
-
-def test_dry_run_rejects_price_increment_and_minimum_funds():
-    transport = FakeTransport([response(SYMBOL), response(SYMBOL)])
-    client = KuCoinClient(transport=transport)
-    bad_price = client.prepare_dry_run_order("BNB-USDT", "buy", "1", "limit", "610.01")
-    assert not bad_price.validation.valid
-    assert "reference price does not match priceIncrement" in bad_price.validation.errors
-    low_notional = client.prepare_dry_run_order("BNB-USDT", "buy", "0.01", "limit", "610")
-    assert not low_notional.validation.valid
-    assert "notional is below minFunds" in low_notional.validation.errors
-
-
-def test_dry_run_rejects_trading_disabled_symbol():
-    transport = FakeTransport([response({**SYMBOL, "enableTrading": False})])
-    order = KuCoinClient(transport=transport).prepare_dry_run_order(
-        "BNB-USDT", "buy", "1", "limit", "610"
-    )
-    assert not order.validation.valid
-    assert "symbol is not enabled for trading" in order.validation.errors
-
-
-def test_dry_run_quantity_and_price_boundaries_are_inclusive():
-    transport = FakeTransport([response(SYMBOL), response(SYMBOL)])
-    client = KuCoinClient(transport=transport)
-    at_minimum = client.prepare_dry_run_order("BNB-USDT", "buy", "0.1", "limit", "100")
-    at_maximum = client.prepare_dry_run_order("BNB-USDT", "sell", "100", "limit", "0.1")
-    assert at_minimum.validation.valid
-    assert at_maximum.validation.valid
-
-
-def test_http_timeout_then_success():
-    transport = FakeTransport([
-        ExchangeTimeoutError("timeout"),
-        response(SYMBOL),
-    ])
-    client = KuCoinClient(transport=transport, sleeper=lambda _: None)
-    assert client.get_symbol("BNB-USDT").symbol == "BNB-USDT"
-
-
-def test_network_failure_is_structured():
-    transport = FakeTransport([ExchangeNetworkError("network")] * 4)
-    client = KuCoinClient(
-        config=KuCoinConfig(max_retries=3),
-        transport=transport,
-        sleeper=lambda _: None,
-    )
-    with pytest.raises(ExchangeNetworkError):
-        client.get_symbol("BNB-USDT")
-
-
-def test_http429_retries_and_has_retry_guidance():
-    transport = FakeTransport([
-        response(None, status=429, headers={"Retry-After": "2"}),
-        response(SYMBOL),
-    ])
-    client = KuCoinClient(transport=transport, sleeper=lambda _: None)
-    assert client.get_symbol("BNB-USDT").symbol == "BNB-USDT"
-
-
-def test_malformed_retry_after_uses_backoff_without_crashing():
-    sleeps = []
-    transport = FakeTransport([
-        response(None, status=429, headers={"Retry-After": "not-a-number"}),
-        response(SYMBOL),
-    ])
-    client = KuCoinClient(transport=transport, sleeper=sleeps.append)
-    assert client.get_symbol("BNB-USDT").symbol == "BNB-USDT"
-    assert sleeps == [0.5]
-
-
-def test_ticker_timestamps_distinguish_exchange_time_from_retrieval_time():
-    transport = FakeTransport([response({
-        "time": 1700000000000,
-        "ticker": [{"symbol": "BNB-USDT", "last": "610", "buy": "609", "sell": "611"}],
-    })])
-    ticker = KuCoinClient(transport=transport).get_ticker("BNB-USDT")
-    assert ticker.event_timestamp == datetime.fromtimestamp(1700000000, timezone.utc)
-    assert ticker.retrieved_at.tzinfo == timezone.utc
-
-
-def test_missing_exchange_timestamp_is_not_fabricated():
-    transport = FakeTransport([response({
-        "ticker": [{"symbol": "BNB-USDT", "last": "610", "buy": "609", "sell": "611"}],
-    })])
-    ticker = KuCoinClient(transport=transport).get_ticker("BNB-USDT")
-    assert ticker.event_timestamp is None
-    assert ticker.retrieved_at is not None
-
-
-def test_dry_run_rejects_fee_data_for_another_exchange():
-    transport = FakeTransport([response(SYMBOL)])
-    fee_info = FeeInfo(
-        exchange="other-exchange",
-        symbol="BNB-USDT",
-        maker_rate=Decimal("0.001"),
-        taker_rate=Decimal("0.002"),
-        source="fixture",
-        status="live",
-        retrieved_at=datetime.now(timezone.utc),
-    )
-    order = KuCoinClient(transport=transport).prepare_dry_run_order(
-        "BNB-USDT", "buy", "2", "limit", "610", fee_info=fee_info
-    )
-    assert not order.validation.valid
-    assert "fee data exchange does not match the order exchange" in order.validation.errors
-
-
-def test_http429_exhausted():
-    transport = FakeTransport([response(None, status=429)] * 4)
-    client = KuCoinClient(
-        config=KuCoinConfig(max_retries=3),
-        transport=transport,
-        sleeper=lambda _: None,
-    )
-    with pytest.raises(ExchangeRateLimitError):
-        client.get_symbol("BNB-USDT")
-
-
-def test_http500_retries():
-    transport = FakeTransport([response(None, status=500), response(SYMBOL)])
-    client = KuCoinClient(transport=transport, sleeper=lambda _: None)
-    assert client.get_symbol("BNB-USDT").symbol == "BNB-USDT"
-
-
-def test_non_retryable_http_error():
-    transport = FakeTransport([response(None, status=400)])
+def test_http_errors_and_exhausted_rate_limit_are_explicit():
     with pytest.raises(ExchangeHTTPError):
-        KuCoinClient(transport=transport, sleeper=lambda _: None).get_symbol("BNB-USDT")
-
-
-def test_malformed_json():
-    transport = FakeTransport([{"status": 200, "headers": {}, "body": b"{bad"}])
-    with pytest.raises(ExchangeResponseError):
-        KuCoinClient(transport=transport).get_symbol("BNB-USDT")
-
-
-def test_unexpected_symbol_response():
-    transport = FakeTransport([response({"unexpected": True})])
-    with pytest.raises(ExchangeResponseError):
-        KuCoinClient(transport=transport).get_symbols()
+        KuCoinClient(transport=FakeTransport([response(status=400)])).get_symbols()
+    with pytest.raises(ExchangeRateLimitError):
+        KuCoinClient(
+            config=KuCoinConfig(max_retries=0),
+            transport=FakeTransport([response(status=429, headers={"Retry-After": "NaN"})]),
+        ).get_symbols()

@@ -1,69 +1,71 @@
 # KuCoin Read-Only Integration
 
-## Scope
+## Scope and safety boundary
 
-The `trading_platform.exchanges` package provides provider-neutral exchange contracts and a read-only KuCoin Spot REST adapter. It retrieves public symbol, ticker, and order-book data and, with credentials, private account balances and pair-specific actual fee rates.
+The `trading_platform.exchanges` package provides a provider-neutral Best Bid/Ask contract, a read-only KuCoin Spot adapter, a WebSocket-first quote feed, and local dry-run preparation. Market data is limited to Level 1 Best Bid/Ask; the adapter does not retrieve or retain Level 2 order books.
 
-The implementation has no place-order, cancel, amend, withdraw, deposit, transfer, or other account-changing method. `prepare_dry_run_order()` only validates and represents a hypothetical order locally.
+No order submission, cancel, amend, transfer, withdrawal, deposit, or other account-changing method is implemented. No real API key is needed for public quotes or local tests. Private balance reads require an API key with General (read-only) permission; do not enable trading or withdrawal permissions.
 
-## Provider-neutral contracts
+## Configuration and models
 
-`ExchangeAdapter` in `trading_platform/exchanges/contracts.py` defines the reusable public interface for future exchanges. Typed models are in `trading_platform/exchanges/models.py` and use `Decimal` for prices, quantities, balances, and fees.
-
-## Configuration
-
-Public endpoints need no credentials. Private read-only endpoints read:
+Public REST and public WebSocket market data need no API key. Private balance reads use local-only environment variables:
 
 - `KUCOIN_API_KEY`
 - `KUCOIN_API_SECRET`
 - `KUCOIN_API_PASSPHRASE`
 
-These values must be local-only environment variables. `.env` is ignored by Git and `.env.example` contains empty placeholders only. Do not grant Spot trading or Withdrawal permission.
+`.env` is ignored by Git and `.env.example` contains empty placeholders.
 
-`KuCoinConfig` supports `base_url`, `timeout`, bounded `max_retries`, and explicit fee-fallback configuration.
+`BestBidAskQuote` records Decimal bid/ask prices and sizes, its source (`WEBSOCKET` or `REST`), optional exchange `event_timestamp`, local `received_at`, and freshness (`FRESH` or `STALE`). Retrieval time is never represented as exchange event time. The feed owns one public WebSocket connection for its configured symbols, reconnects with capped exponential backoff, and polls REST only when a configured symbol has no fresh WebSocket quote. REST requests are spaced and the initial feed gives the WebSocket a short opportunity to deliver before fallback.
 
-## REST endpoints
+REST and WebSocket quotes are rejected if any required price or size is missing, non-finite, non-positive, or crossed (`bestBid >= bestAsk`). If fallback fails and only a stale quote is cached, `get_quote()` returns it with `freshness=STALE`; callers must not use it as current market data.
 
-| Method | Path | Auth | Permission / purpose | Parameters |
-|---|---|---|---|---|
-| GET | `/api/v2/symbols` | Public | Spot symbol list, increments, and `minFunds` | Optional `market` |
-| GET | `/api/v2/symbols/{symbol}` | Public | Symbol detail and increments | Symbol path |
-| GET | `/api/v1/market/allTickers` | Public | 24-hour ticker summary | None |
-| GET | `/api/v1/market/orderbook/level2_20` | Public | REST order-book snapshot, 20 levels | `symbol` |
-| GET | `/api/v1/accounts` | Private | Read-only balances | Optional `currency` |
-| GET | `/api/v1/trade-fees` | Private | Actual pair-specific maker/taker rates | `symbols` query |
+## Official KuCoin endpoints
 
-Official endpoint documentation:
+| Method | Path | Auth | Purpose |
+|---|---|---|---|
+| GET | `/api/v2/symbols` | Public | Spot symbols and trading constraints |
+| GET | `/api/v2/symbols/{symbol}` | Public | Symbol-specific limits and increments |
+| GET | `/api/v1/market/orderbook/level1?symbol=BNB-USDT` | Public | Best bid/ask prices and sizes; REST fallback only |
+| POST | `/api/v1/bullet-public` | Public | Classic Spot/Margin WebSocket token and server/heartbeat metadata |
+| GET | `/api/v1/accounts` | Private, General permission | Read-only account balances |
+
+Documentation:
 
 - [Get All Symbols](https://www.kucoin.com/docs-new/rest/spot-trading/market-data/get-all-symbols)
 - [Get Symbol](https://www.kucoin.com/docs-new/rest/spot-trading/market-data/get-symbol)
-- [Get All Tickers](https://www.kucoin.com/docs-new/rest/spot-trading/market-data/get-all-tickers)
-- [Get Actual Fee - Spot/Margin](https://www.kucoin.com/docs-new/rest/account-info/trade-fee/get-actual-fee-spot-margin)
-- [Get Basic Fee - Spot/Margin](https://www.kucoin.com/docs-new/api-3470149)
-- API documentation root: https://www.kucoin.com/docs
+- [Get Ticker — Level 1 Best Bid/Ask](https://www.kucoin.com/docs-new/rest/spot-trading/market-data/get-ticker)
+- [Get Account List — Spot](https://www.kucoin.com/docs-new/rest/account-info/account-funding/get-account-list-spot)
+- [Classic Spot/Margin WebSocket introduction](https://www.kucoin.com/docs-new/websocket-api/base-info/introduction)
+- [Get Public Token — Classic Spot/Margin](https://www.kucoin.com/docs-new/websocket-api/base-info/get-public-token-spot-margin)
+- [WebSocket API introduction and UTA distinction](https://www.kucoin.com/docs-new/websocket-api/introduction)
 
-Private account and fee endpoints require KuCoin API-key authentication and General (read-only) permission. Never use an API key with trading or withdrawal permission. The actual-fee endpoint returns a list of symbol/maker/taker records, accepts up to 10 symbols per request, and the adapter currently requests one pair at a time.
+The WebSocket implementation uses the Classic Spot/Margin public protocol: obtain `/api/v1/bullet-public` token metadata, wait for the `{ "type": "welcome" }` message, subscribe to `/market/ticker:{symbol}`, and acknowledge `type=ack`. It sends `type=ping` at the server-provided interval and reconnects if a `pong` is not received before the server timeout. The UTA Pro WebSocket uses a different token and `action`/`channel` subscription protocol and is not mixed with this Classic connection.
 
-The pair-specific actual-fee endpoint is `/api/v1/trade-fees?symbols=BNB-USDT`. The distinct `/api/v1/base-fee` endpoint returns the account's basic Spot/Margin fee rate, takes `currencyType`, and is not used by this adapter for pair-specific fees. KuCoin documents rate-limit weight 3 for the actual-fee endpoint.
+The Level 1 REST endpoint documents `bestBid`, `bestBidSize`, `bestAsk`, `bestAskSize`, and `time`; `time` remains optional in the normalized model. A missing or malformed event time stays `None`.
 
-The KuCoin REST signing procedure is timestamped HMAC-SHA256: `timestamp + method + endpoint + body`, Base64 of the HMAC digest, API passphrase HMAC-SHA256 using the API secret and Base64 encoding, and the `KC-API-KEY-VERSION: 2` header. Public requests require no signing.
+## Request reliability
 
-## Rate limits and failures
+The REST client uses a 10-second timeout, at most three retries, and exponential backoff for network/timeouts and HTTP 5xx. HTTP 429 honors a valid numeric or HTTP-date `Retry-After`, capped at 60 seconds; malformed values use bounded backoff. HTTP/API errors, authentication failures, and malformed successful responses are surfaced as typed errors. Unexpected programming errors are not converted into successful or fallback-shaped results.
 
-The client uses a 10-second timeout by default, at most three retries, exponential backoff, and respects valid non-negative `Retry-After` values for HTTP 429. Malformed retry guidance falls back to exponential backoff. Authentication and validation errors are not retried indefinitely. HTTP 429 is retried only within the bounded retry count. HTTP 5xx and network/timeout failures are retried; HTTP 4xx failures are surfaced as typed errors.
+The market-data feed defaults to a 5-second maximum quote age, 2-second fallback polling interval, 250 ms minimum REST request spacing, and reconnect backoff from 0.5 to 10 seconds. These are local safety limits, not KuCoin rate-limit guarantees. The Level 1 REST endpoint has weight 2; public WebSocket is preferred to avoid repeated REST polling.
 
-Malformed JSON and unexpected payload shapes raise `ExchangeResponseError`. Secrets are never included in exception text or logs.
+## Balances
 
-## Fee fallback
+The adapter parses `balance`, `available`, and `holds` as finite, non-negative Decimals and requires `balance == available + holds`. Each balance has a local retrieval timestamp only. Private connectivity has not been tested with a real account key.
 
-Live fee retrieval reports `live`, `fallback`, or `unavailable`. A fallback is used only when `fee_fallback_enabled=True` and an explicit `FeeFallback` has been configured. This applies to authentication, HTTP/API response, rate-limit, network, and timeout failures. The fallback identifies its source and whether it is verified. It is never silently substituted after a live failure. Unexpected programming errors are not caught or converted into fallback results.
+## Fixed fee assumption and configured trade sizes
 
-## Order-book semantics
+`FixedFeePolicy` centralizes the owner-configured `Decimal("0.001")` (0.1%) estimate. It is the same for every symbol, side, and order type and is explicitly labeled `fixed-assumption`; it is not represented as a live KuCoin rate. No private fee request is made. The pair-specific `/api/v1/trade-fees` and basic `/api/v1/base-fee` endpoints are not used.
 
-Level 2 REST retrieval is a snapshot, not a continuously synchronized order book. A WebSocket implementation would require a separate future enhancement.
+An operator must provide a `FixedTradeSize` for each symbol; this repository invents no quantities and does not size from balances. `prepare_configured_dry_run_order()` accepts that exact quantity and a supplied Best Bid/Ask quote, selects ask for buys and bid for sells, and validates without rounding. A stale or wrong-symbol quote invalidates the dry-run. `prepare_dry_run_order()` requires an explicit reference price and performs no market-data or fee request.
 
-## Dry-run boundary
+Dry-run validation covers finite positive quantity and reference price, base increment, configured minimum/maximum quantity, limit price increment, `minFunds`, and `enableTrading`. Market orders use the taker assumption and cannot be labeled maker. A limit-order maker/taker label is only an explicit assumption; the fee amount remains the same fixed 0.1%.
 
-Ticker and order-book models distinguish optional exchange `event_timestamp` from local `retrieved_at`. If KuCoin does not return an event time, `event_timestamp` is `None`; local retrieval time is never represented as exchange time. Balance and fee results have local retrieval timestamps only.
+## Validation boundary and limitations
 
-`prepare_dry_run_order()` validates symbol, side, type, finite positive quantity and price, minimum/maximum quantity, base quantity increment, limit price increment, `minFunds`, and trading-enabled status. It computes notional locally and uses `dry_run=True`. Previously fetched `FeeInfo` may be supplied; preparation does not fetch private fee data. It calculates maker and taker estimates using `Decimal`, with an explicit assumption recorded on the result. A market order always uses the taker assumption and rejects an explicit maker assumption. Missing fee data remains `fee_status="unavailable"` with no estimates. It never makes an HTTP request to a trading endpoint. The implementation contains no method for placing or changing orders.
+- Tests use deterministic fake transports and fake WebSocket connections only; no live KuCoin connection or real account key was used.
+- The public Classic Spot/Margin token, subscription, and heartbeat protocol is documented. The WebSocket quote parser accepts the ticker Best Bid/Ask fields and applies the same strict validation as REST.
+- There are no preconfigured per-symbol trade quantities; a caller must supply them.
+- `quoteMinSize` is exposed in symbol metadata but is not treated as a base-quantity or quote-notional threshold. `minFunds` is the documented quote-value minimum enforced by dry-run validation.
+- This is a market-data and local dry-run integration only, not a trading system.

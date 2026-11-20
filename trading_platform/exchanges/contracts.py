@@ -1,23 +1,34 @@
-"""Provider-neutral exchange read-only contracts."""
+"""Provider-neutral exchange and market-data contracts."""
 from typing import Protocol, Sequence
-from .models import Balance, DryRunOrder, FeeInfo, FeeFallback, OrderBook, SymbolMetadata, Ticker
+
+from .models import (
+    Balance,
+    BestBidAskQuote,
+    DryRunOrder,
+    FixedTradeSize,
+    MarketDataConnectionStatus,
+    SymbolMetadata,
+)
 
 
 class ExchangeAdapter(Protocol):
-    def get_ticker(self, symbol: str) -> Ticker: ...
+    def get_best_bid_ask(self, symbol: str) -> BestBidAskQuote: ...
     def get_symbols(self) -> Sequence[SymbolMetadata]: ...
     def get_symbol(self, symbol: str) -> SymbolMetadata: ...
-    def get_order_book(self, symbol: str, depth: int = 20) -> OrderBook: ...
     def get_balances(self, currency: str | None = None) -> Sequence[Balance]: ...
-    def get_fees(self, symbol: str, fallback: FeeFallback | None = None,
-                 fallback_enabled: bool | None = None) -> FeeInfo: ...
-    def prepare_dry_run_order(
+    def prepare_configured_dry_run_order(
         self,
-        symbol: str,
+        trade_size: FixedTradeSize,
         side: str,
-        quantity: object,
-        order_type: str = "limit",
-        reference_price: object | None = None,
-        fee_info: FeeInfo | None = None,
-        fee_assumption: str | None = None,
+        quote: BestBidAskQuote,
+        order_type: str = "market",
     ) -> DryRunOrder: ...
+
+
+class BestBidAskProvider(Protocol):
+    async def start(self) -> None: ...
+    async def close(self) -> None: ...
+    async def get_quote(self, symbol: str) -> BestBidAskQuote: ...
+
+    @property
+    def connection_status(self) -> MarketDataConnectionStatus: ...
