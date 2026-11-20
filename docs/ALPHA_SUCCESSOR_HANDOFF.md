@@ -34,7 +34,7 @@ Repository: `elvito2808/Trading-Management-Platform`
 | Default branch | `main` |
 | Main SHA observed in the project status history | `6cb4d2d2d9e6ec00310c672cf822ee46db5e5c22` |
 | Phase 1 branch | `feature/phase-1-kucoin-integration` |
-| Phase 1 PR | [#5](https://github.com/elvito2808/Trading-Management-Platform/pull/5) — Open, Draft, Unmerged |
+| Phase 1 PR | [#5](https://github.com/elvito2808/Trading-Management-Platform/pull/5) — Open, Draft, Unmerged; base `alpha/repository-governance-baseline` at `61db78870463fac959a1bb8cbf25eeef32ef41bf` |
 | Phase 1 submitted HEAD | `316829506217cb817c69f04af5eaa9614a29feff` |
 | Phase 2 branch | `feature/phase-2-bsc-pancakeswap-integration` |
 | Phase 2 PR | [#6](https://github.com/elvito2808/Trading-Management-Platform/pull/6) — Open, Draft, Unmerged |
@@ -47,7 +47,7 @@ At the time of the latest direct PR #6 inspection:
 - It contained 27 changed files and 5 commits.
 - No combined CI status evidence was available. Do not claim CI passed.
 - PR #5 was also Open, Draft, and Unmerged.
-- Neither PR has merge authorization. No merge was performed by this handoff.
+- The live PR #5 description still contains an older statement that ALPHA review is in progress and Phase 1 is not accepted. That PR-body text is stale relative to the explicit later ALPHA decision: Phase 1 was accepted with deferred validation items. Preserve the PR history, but use this handoff for the reconciled acceptance decision unless a later owner-authorized update exists. PR #6 remains partially completed as stated above. Neither PR has merge authorization. No merge was performed by this handoff.
 
 The new ALPHA must re-check both PRs, branch heads, base SHAs, main, rulesets, CI/status checks, changed files, and PR discussion before taking further action. Never assume a SHA or PR state remains current.
 
