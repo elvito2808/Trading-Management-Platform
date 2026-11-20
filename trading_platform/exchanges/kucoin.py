@@ -7,6 +7,7 @@ import base64
 import hashlib
 import hmac
 import json
+import math
 import os
 import time
 import urllib.error
@@ -14,8 +15,8 @@ import urllib.parse
 import urllib.request
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from decimal import Decimal, InvalidOperation
-from typing import Callable, Optional, Sequence
+from decimal import Decimal, DecimalException, InvalidOperation
+from typing import Callable, Optional
 
 from .errors import (
     ExchangeAuthenticationError,
@@ -62,11 +63,7 @@ def _decimal(value, field: str) -> Decimal:
 def _optional_decimal(value) -> Optional[Decimal]:
     if value is None or str(value).strip() == "":
         return None
-    try:
-        result = Decimal(str(value).strip())
-        return result if result.is_finite() else None
-    except (InvalidOperation, AttributeError, ValueError):
-        return None
+    return _decimal(value, "optional numeric field")
 
 
 class KuCoinClient:
@@ -155,15 +152,23 @@ class KuCoinClient:
             status = int(response["status"])
             raw_headers = response["headers"]
             raw_body = response["body"]
-            if isinstance(raw_body, bytes):
-                raw_body = raw_body.decode("utf-8")
             try:
+                if isinstance(raw_body, bytes):
+                    raw_body = raw_body.decode("utf-8")
                 payload = json.loads(raw_body)
             except (json.JSONDecodeError, UnicodeDecodeError, AttributeError) as exc:
                 raise ExchangeResponseError("KuCoin returned invalid JSON") from exc
             if status == 429:
-                retry = raw_headers.get("Retry-After") or raw_headers.get("retry-after")
-                seconds = float(retry) if retry else None
+                retry = next(
+                    (value for key, value in raw_headers.items() if key.lower() == "retry-after"),
+                    None,
+                )
+                try:
+                    seconds = float(retry) if retry is not None else None
+                    if seconds is not None and (not math.isfinite(seconds) or seconds < 0):
+                        seconds = None
+                except (TypeError, ValueError):
+                    seconds = None
                 if attempt < retries:
                     self._sleeper(seconds if seconds is not None else 0.5 * (2 ** attempt))
                     continue
@@ -190,14 +195,16 @@ class KuCoinClient:
         raise ExchangeNetworkError("KuCoin request retry limit reached")
 
     def get_symbols(self) -> list[SymbolMetadata]:
-        data = self._request("GET", "/api/v1/symbols")
+        data = self._request("GET", "/api/v2/symbols")
         if not isinstance(data, list):
             raise ExchangeResponseError("Unexpected symbol-list response")
-        return [self._parse_symbol(item) for item in data if isinstance(item, dict)]
+        if any(not isinstance(item, dict) for item in data):
+            raise ExchangeResponseError("Malformed symbol-list item")
+        return [self._parse_symbol(item) for item in data]
 
     def get_symbol(self, symbol: str) -> SymbolMetadata:
         symbol = self._validate_symbol_name(symbol)
-        data = self._request("GET", f"/api/v1/symbols/{urllib.parse.quote(symbol, safe='-')}")
+        data = self._request("GET", f"/api/v2/symbols/{urllib.parse.quote(symbol, safe='-')}")
         if not isinstance(data, dict):
             raise ExchangeResponseError("Unexpected symbol-detail response")
         return self._parse_symbol(data)
@@ -214,6 +221,7 @@ class KuCoinClient:
             base_min_size=_optional_decimal(item.get("baseMinSize")),
             base_max_size=_optional_decimal(item.get("baseMaxSize")),
             quote_min_size=_optional_decimal(item.get("quoteMinSize")),
+            min_funds=_optional_decimal(item.get("minFunds")),
             price_increment=_optional_decimal(item.get("priceIncrement")),
             quantity_increment=_optional_decimal(item.get("baseIncrement")),
             base_precision=self._precision(item.get("baseIncrement")),
@@ -234,17 +242,20 @@ class KuCoinClient:
         data = self._request("GET", "/api/v1/market/allTickers")
         if not isinstance(data, dict) or not isinstance(data.get("ticker"), list):
             raise ExchangeResponseError("Unexpected ticker response")
+        if any(not isinstance(item, dict) for item in data["ticker"]):
+            raise ExchangeResponseError("Malformed ticker item")
         match = next((item for item in data["ticker"] if item.get("symbol") == symbol), None)
         if match is None:
             raise ExchangeResponseError(f"No ticker data returned for {symbol}")
-        now = datetime.now(timezone.utc)
+        retrieved_at = datetime.now(timezone.utc)
         return Ticker(
             exchange="kucoin",
             symbol=symbol,
             price=_optional_decimal(match.get("last")),
             bid=_optional_decimal(match.get("buy")),
             ask=_optional_decimal(match.get("sell")),
-            timestamp=now,
+            retrieved_at=retrieved_at,
+            event_timestamp=self._exchange_timestamp(data.get("time")),
             high_24h=_optional_decimal(match.get("high")),
             low_24h=_optional_decimal(match.get("low")),
             change_24h=_optional_decimal(match.get("changeRate")),
@@ -270,7 +281,8 @@ class KuCoinClient:
         return OrderBook(
             exchange="kucoin",
             symbol=symbol,
-            timestamp=datetime.now(timezone.utc),
+            retrieved_at=datetime.now(timezone.utc),
+            event_timestamp=self._exchange_timestamp(data.get("time")),
             sequence=sequence,
             bids=tuple(self._parse_level(row) for row in bids),
             asks=tuple(self._parse_level(row) for row in asks),
@@ -310,45 +322,71 @@ class KuCoinClient:
 
     def get_fees(
         self,
-        symbol: str | None = None,
+        symbol: str,
         fallback: FeeFallback | None = None,
         fallback_enabled: bool | None = None,
     ) -> FeeInfo:
+        symbol = self._validate_symbol_name(symbol)
         fallback_enabled = (
             self.config.fee_fallback_enabled if fallback_enabled is None else fallback_enabled
         )
         fallback = fallback or self.config.fee_fallback
         try:
-            params = {"symbols": symbol} if symbol else None
-            data = self._request("GET", "/api/v1/base-fee", params, private=True)
-            if not isinstance(data, dict):
+            data = self._request(
+                "GET", "/api/v1/trade-fees", {"symbols": symbol}, private=True
+            )
+            if not isinstance(data, list):
                 raise ExchangeResponseError("Unexpected fee response")
-            maker = _optional_decimal(data.get("makerFeeRate"))
-            taker = _optional_decimal(data.get("takerFeeRate"))
-            if maker is None or taker is None:
-                raise ExchangeResponseError("Fee response omitted maker or taker rate")
+            item = next(
+                (
+                    value for value in data
+                    if isinstance(value, dict) and value.get("symbol") == symbol
+                ),
+                None,
+            )
+            if item is None:
+                raise ExchangeResponseError(f"No fee data returned for {symbol}")
+            maker = self._fee_rate(item.get("makerFeeRate"), "makerFeeRate")
+            taker = self._fee_rate(item.get("takerFeeRate"), "takerFeeRate")
             return FeeInfo(
                 exchange="kucoin",
                 symbol=symbol,
                 maker_rate=maker,
                 taker_rate=taker,
-                source="official KuCoin live base-fee endpoint",
+                source="official KuCoin pair-specific trade-fees endpoint",
                 status="live",
                 retrieved_at=datetime.now(timezone.utc),
+                verified=True,
             )
-        except (ExchangeAuthenticationError, ExchangeHTTPError, ExchangeResponseError) as exc:
+        except (
+            ExchangeAuthenticationError,
+            ExchangeHTTPError,
+            ExchangeNetworkError,
+            ExchangeRateLimitError,
+            ExchangeResponseError,
+        ) as exc:
             warning = f"Live fee request unavailable: {type(exc).__name__}"
-            if fallback_enabled and fallback is not None:
+            if (
+                fallback_enabled
+                and fallback is not None
+                and fallback.exchange.casefold() == "kucoin"
+                and fallback.symbol in (None, symbol)
+            ):
+                maker = self._fee_rate(fallback.maker_rate, "fallback maker rate")
+                taker = self._fee_rate(fallback.taker_rate, "fallback taker rate")
                 return FeeInfo(
                     exchange="kucoin",
                     symbol=symbol,
-                    maker_rate=fallback.maker_rate,
-                    taker_rate=fallback.taker_rate,
+                    maker_rate=maker,
+                    taker_rate=taker,
                     source=fallback.source,
                     status="fallback",
                     retrieved_at=datetime.now(timezone.utc),
+                    verified=fallback.verified,
                     warning=warning,
                 )
+            if fallback_enabled and fallback is not None:
+                warning += "; configured fallback exchange or symbol does not match the request"
             return FeeInfo(
                 exchange="kucoin",
                 symbol=symbol,
@@ -357,6 +395,7 @@ class KuCoinClient:
                 source="live-request",
                 status="unavailable",
                 retrieved_at=datetime.now(timezone.utc),
+                verified=None,
                 warning=warning,
             )
 
@@ -367,6 +406,8 @@ class KuCoinClient:
         quantity: object,
         order_type: str = "limit",
         reference_price: object | None = None,
+        fee_info: FeeInfo | None = None,
+        fee_assumption: str | None = None,
     ) -> DryRunOrder:
         """Prepare locally only. This method never creates HTTP trading requests."""
         symbol = self._validate_symbol_name(symbol)
@@ -388,24 +429,104 @@ class KuCoinClient:
                 raise ExchangeResponseError("Reference price must be a valid Decimal") from exc
         metadata = self.get_symbol(symbol)
         errors = []
+        if not quantity_decimal.is_finite():
+            errors.append("quantity must be finite")
+        elif quantity_decimal <= 0:
+            errors.append("quantity must be positive")
+        if not reference.is_finite():
+            errors.append("reference price must be finite")
+        elif reference <= 0:
+            errors.append("reference price must be positive")
         if side not in ("buy", "sell"):
             errors.append("side must be buy or sell")
         if order_type not in ("market", "limit"):
             errors.append("order type must be market or limit")
-        if quantity_decimal <= 0:
-            errors.append("quantity must be positive")
-        if reference <= 0:
-            errors.append("reference price must be positive")
-        if metadata.base_min_size is not None and quantity_decimal < metadata.base_min_size:
-            errors.append("quantity is below baseMinSize")
-        if metadata.base_max_size is not None and quantity_decimal > metadata.base_max_size:
-            errors.append("quantity exceeds baseMaxSize")
+        if metadata.trading_status.lower() not in ("true", "enabled", "active"):
+            errors.append("symbol is not enabled for trading")
+        if order_type == "market":
+            if fee_assumption == "maker":
+                errors.append("market orders cannot use the maker fee assumption")
+            selected_fee_assumption = "taker"
+        else:
+            selected_fee_assumption = fee_assumption or "taker"
+            if selected_fee_assumption not in ("maker", "taker"):
+                errors.append("fee assumption must be maker or taker")
+        if quantity_decimal.is_finite():
+            if metadata.base_min_size is not None and quantity_decimal < metadata.base_min_size:
+                errors.append("quantity is below baseMinSize")
+            if metadata.base_max_size is not None and quantity_decimal > metadata.base_max_size:
+                errors.append("quantity exceeds baseMaxSize")
         if metadata.quantity_increment is not None:
             increment = metadata.quantity_increment
-            if increment > 0 and quantity_decimal % increment != 0:
-                errors.append("quantity does not match baseIncrement")
-        notional = quantity_decimal * reference
-        fee = None
+            if increment > 0 and quantity_decimal.is_finite():
+                try:
+                    if quantity_decimal % increment != 0:
+                        errors.append("quantity does not match baseIncrement")
+                except DecimalException:
+                    errors.append("quantity cannot be validated against baseIncrement")
+        if (
+            order_type == "limit"
+            and metadata.price_increment is not None
+            and metadata.price_increment > 0
+            and reference.is_finite()
+        ):
+            try:
+                if reference % metadata.price_increment != 0:
+                    errors.append("reference price does not match priceIncrement")
+            except DecimalException:
+                errors.append("reference price cannot be validated against priceIncrement")
+
+        notional = None
+        if quantity_decimal.is_finite() and reference.is_finite():
+            try:
+                notional = quantity_decimal * reference
+                if not notional.is_finite():
+                    notional = None
+                    errors.append("notional must be finite")
+                if (
+                    notional is not None
+                    and metadata.min_funds is not None
+                    and notional < metadata.min_funds
+                ):
+                    errors.append("notional is below minFunds")
+            except DecimalException:
+                notional = None
+                errors.append("notional cannot be calculated")
+
+        maker_fee = None
+        taker_fee = None
+        fee_status = "unavailable"
+        if fee_info is not None and fee_info.status in ("live", "fallback"):
+            if fee_info.exchange.casefold() != "kucoin":
+                errors.append("fee data exchange does not match the order exchange")
+                fee_status = "invalid"
+            elif fee_info.symbol is not None and fee_info.symbol != symbol:
+                errors.append("fee data symbol does not match order symbol")
+                fee_status = "invalid"
+            elif notional is not None:
+                try:
+                    if order_type != "market" and fee_info.maker_rate is not None:
+                        maker_rate = self._fee_rate(fee_info.maker_rate, "maker rate")
+                        maker_fee = notional * maker_rate
+                    if fee_info.taker_rate is not None:
+                        taker_rate = self._fee_rate(fee_info.taker_rate, "taker rate")
+                        taker_fee = notional * taker_rate
+                    if (
+                        (maker_fee is not None and not maker_fee.is_finite())
+                        or (taker_fee is not None and not taker_fee.is_finite())
+                    ):
+                        raise DecimalException("fee estimate is not finite")
+                    selected_rate = (
+                        fee_info.taker_rate if selected_fee_assumption == "taker"
+                        else fee_info.maker_rate
+                    )
+                    fee_status = fee_info.status if selected_rate is not None else "unavailable"
+                except ExchangeResponseError:
+                    errors.append("fee data contains an invalid rate")
+                    fee_status = "invalid"
+                except DecimalException:
+                    errors.append("fee estimate cannot be calculated")
+                    fee_status = "invalid"
         return DryRunOrder(
             exchange="kucoin",
             symbol=symbol,
@@ -414,12 +535,34 @@ class KuCoinClient:
             quantity=quantity_decimal,
             reference_price=reference,
             estimated_notional=notional,
-            estimated_maker_fee=fee,
-            estimated_taker_fee=fee,
+            estimated_maker_fee=maker_fee,
+            estimated_taker_fee=taker_fee,
+            fee_assumption=selected_fee_assumption,
+            fee_status=fee_status,
             validation=ValidationResult(valid=not errors, errors=tuple(errors)),
             dry_run=True,
             prepared_at=datetime.now(timezone.utc),
         )
+
+    @staticmethod
+    def _fee_rate(value, field: str) -> Decimal:
+        rate = _decimal(value, field)
+        if rate < 0:
+            raise ExchangeResponseError(f"Invalid fee rate: {field}")
+        return rate
+
+    @staticmethod
+    def _exchange_timestamp(value) -> datetime | None:
+        if value is None:
+            return None
+        try:
+            numeric = Decimal(str(value))
+            if not numeric.is_finite():
+                return None
+            timestamp = float(numeric / Decimal("1000") if abs(numeric) >= Decimal("100000000000") else numeric)
+            return datetime.fromtimestamp(timestamp, timezone.utc)
+        except (InvalidOperation, OverflowError, OSError, TypeError, ValueError):
+            return None
 
     @staticmethod
     def _validate_symbol_name(symbol: str) -> str:

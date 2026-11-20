@@ -169,6 +169,8 @@ No paid cloud infrastructure or Codespaces were provisioned. No credentials or A
 
 **Status:** PENDING_ALPHA_REVIEW — implementation and local verification performed; private account connectivity remains unverified without real credentials.
 
+This section records the initial implementation at commit `a954ebdded9ce8a1ad33352afce236f0730a50c2`, before ALPHA's review corrections. Corrections and current results are recorded below; older statements in this section are historical for that initial PR head.
+
 ### Verified live repository state
 
 - Repository: `elvito2808/Trading-Management-Platform`
@@ -281,3 +283,41 @@ Full result: `69 passed in 0.90s`.
 3. Commit on `feature/phase-1-kucoin-integration`.
 4. Push if credentials permit.
 5. Create a Draft PR to `alpha/repository-governance-baseline` if permissions permit.
+
+---
+
+## ALPHA review corrections — PR #5
+
+**Review:** https://github.com/elvito2808/Trading-Management-Platform/pull/5#issuecomment-7028142696
+**Working branch:** `feature/phase-1-kucoin-integration`
+**PR:** https://github.com/elvito2808/Trading-Management-Platform/pull/5
+**Correction commit:** pending commit; this follow-up will be added to PR #5 without rewriting history.
+
+### Corrections made
+
+- Replaced the incorrect pair-fee request with `GET /api/v1/trade-fees?symbols={symbol}`.
+- Parses the documented list, selects the exact pair, and validates finite non-negative maker/taker rates. This adapter makes one-symbol requests; it does not batch.
+- Keeps `/api/v1/base-fee` distinguished as the basic account fee endpoint and does not use it for pair-specific fees.
+- Added caller-supplied `FeeInfo` to dry-run preparation. It never performs a private fee request and estimates maker/taker amounts with `Decimal`; market orders use taker only. Unknown fee data remains explicitly unavailable.
+- Added finite/positive quantity and price checks; quantity and price increments; min/max size; `minFunds`; and trading-enabled checks.
+- Fallback behavior now explicitly covers typed authentication, HTTP/API, rate-limit, network, and timeout errors only when enabled and when the fallback exchange/symbol matches. Malformed `Retry-After` uses bounded exponential backoff; unexpected programming exceptions propagate.
+- Market data timestamps now distinguish optional exchange `event_timestamp` from local `retrieved_at`. Missing exchange time remains `None`.
+- Updated official symbol metadata calls to the documented v2 endpoints, which expose `minFunds`.
+- Reconciled current PR #5, task branch, and historical environment-blocker records without deleting the original chronology.
+
+### Current verification
+
+Python: `3.10.11`
+
+Focused command: `.venv\Scripts\python.exe -m pytest -q tests/test_kucoin.py`
+Result: `55 passed in 0.16s`.
+
+Full command: `.venv\Scripts\python.exe -m pytest -q`
+Result: `98 passed in 1.56s`.
+
+### Remaining limitations
+
+- No live KuCoin endpoints or credentials were used; private balance and fee connectivity remains unverified.
+- This adapter requests one fee symbol at a time (the documented endpoint supports up to 10).
+- Order-book retrieval remains a REST snapshot; WebSocket synchronization is not implemented.
+- No order submission or account-changing operation is present.

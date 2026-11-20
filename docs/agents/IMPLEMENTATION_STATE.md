@@ -1,9 +1,9 @@
 # Living Implementation State & Handoff Ledger
 
-**Repository:** https://github.com/sina1991/Trading-Management-Platform
+**Repository:** https://github.com/elvito2808/Trading-Management-Platform
 **Default branch:** `main`
 **Ledger owner:** Agent 0 (Orchestrator); every implementing agent must update it in its own PR.
-**Last reviewed:** 2026-11-10 (playbook authored; verify repository status each time before relying on this snapshot).
+**Last reviewed:** 2026-11-20 (PR #5 review follow-up; branch state is subject to live verification).
 
 ## Ground rules
 This ledger is a handoff source, not a substitute for checking GitHub. On each session inspect default branch HEAD, open/merged PRs, CI, relevant files, and issues. If live evidence conflicts with this ledger, reconcile and correct it. Link commits, PRs, Actions runs, and tests for any status marked complete.
@@ -24,7 +24,7 @@ Update status values only with evidence: `NOT STARTED`, `IN PROGRESS`, `BLOCKED`
 |---|---|---|---|---|---|
 | Baseline & docs gaps | Agent 0 + Agent 6 | NOT STARTED | Existing main state | — | Re-audit docs and CI; establish acceptance checklist |
 | Core/Data maintenance | Agent 1 | ACCEPTED (Phase 2 documented) | Baseline | Phase 2 evidence in PROGRESS.md; revalidate | Avoid duplicate rebuild; handle concrete gaps only |
-| Exchange/Market Data & Wallet | Agent 2 | IN REVIEW | Core interfaces; security design | Task branch implementation and mocked tests | ALPHA acceptance review remains required |
+| Exchange/Market Data & Wallet | Agent 2 | IN REVIEW | Core interfaces; security design | [PR #5](https://github.com/elvito2808/Trading-Management-Platform/pull/5); ALPHA corrections in progress | Push corrections and retain PENDING_ALPHA_REVIEW until ALPHA acceptance |
 | Strategy & Risk | Agent 3 | NOT STARTED | Core/Data; market data contracts | — | Start definitions/signals and deterministic risk contracts |
 | Execution/Portfolio/Simulation | Agent 4 | NOT STARTED | Strategy/Risk contracts | — | Paper-only simulation before execution adapters |
 | API & UI | Agent 5 | NOT STARTED | Stable application services and DTOs | — | API contract proposal before implementation |
@@ -44,15 +44,15 @@ Append a newest-first entry for each merged/accepted PR:
 - Known limitations / follow-up issue links:
 
 ## In-progress work / handoff
-- Current active branch / PR: `feature/phase-1-kucoin-integration`; Draft PR pending branch push
+- Current active branch / PR: `feature/phase-1-kucoin-integration`; [PR #5](https://github.com/elvito2808/Trading-Management-Platform/pull/5) is open and Draft
 - Agent: AGENT-01-KUCOIN
 - Objective: Implement a modular read-only KuCoin integration and dry-run order preparation.
 - Files/contracts reserved: `trading_platform/exchanges/`, `tests/test_kucoin.py`, KuCoin integration docs
-- Last verified commit: updated on the task branch after implementation commit
-- Checks run and results: baseline `43 passed`; focused `26 passed`; full `69 passed`
+- Last verified commit before corrections: `a954ebdded9ce8a1ad33352afce236f0730a50c2`; correction changes are pending commit
+- Checks run and results: initial baseline `43 passed`; initial focused/full `26`/`69` passed; correction focused suite `54 passed`
 - Blockers: live private-account and private-fee connectivity unverified without a real read-only key
-- Next concrete action: push task branch, create Draft PR, and have ALPHA perform independent acceptance review
-- Ledger updated in PR: pending PR
+- Next concrete action: finish corrections, run focused and full tests, commit and push to PR #5, then have ALPHA perform independent acceptance review
+- Ledger updated in PR: yes, branch correction pending push
 
 ## Shared interface decisions
 Record decisions here or link ADRs. Do not let agents independently invent overlapping interfaces.

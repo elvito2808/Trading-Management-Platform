@@ -12,7 +12,8 @@ class Ticker:
     price: Optional[Decimal]
     bid: Optional[Decimal]
     ask: Optional[Decimal]
-    timestamp: datetime
+    retrieved_at: datetime
+    event_timestamp: Optional[datetime] = None
     high_24h: Optional[Decimal] = None
     low_24h: Optional[Decimal] = None
     change_24h: Optional[Decimal] = None
@@ -34,6 +35,7 @@ class SymbolMetadata:
     base_min_size: Optional[Decimal] = None
     base_max_size: Optional[Decimal] = None
     quote_min_size: Optional[Decimal] = None
+    min_funds: Optional[Decimal] = None
     price_increment: Optional[Decimal] = None
     quantity_increment: Optional[Decimal] = None
     base_precision: Optional[int] = None
@@ -51,9 +53,10 @@ class OrderBookLevel:
 class OrderBook:
     exchange: str
     symbol: str
-    timestamp: datetime
+    retrieved_at: datetime
     bids: tuple[OrderBookLevel, ...]
     asks: tuple[OrderBookLevel, ...]
+    event_timestamp: Optional[datetime] = None
     sequence: Optional[int] = None
     snapshot: bool = True
 
@@ -87,6 +90,7 @@ class FeeInfo:
     source: str
     status: str
     retrieved_at: datetime
+    verified: Optional[bool] = None
     warning: Optional[str] = None
 
 
@@ -104,9 +108,11 @@ class DryRunOrder:
     order_type: str
     quantity: Decimal
     reference_price: Decimal
-    estimated_notional: Decimal
+    estimated_notional: Optional[Decimal]
     estimated_maker_fee: Optional[Decimal]
     estimated_taker_fee: Optional[Decimal]
+    fee_assumption: Optional[str]
+    fee_status: str
     validation: ValidationResult
     dry_run: bool
     prepared_at: datetime
