@@ -9,7 +9,8 @@
 ### Current submitted state (2026-11-20)
 
 - Repository: `elvito2808/Trading-Management-Platform`.
-- Branch and submitted implementation HEAD: `feature/phase-1-kucoin-integration` at `b098b231c9ab3f6d35201a5a91828c3d5632d3ca`.
+- Branch and current submitted HEAD: `feature/phase-1-kucoin-integration` at `cd07970b32396fed478fcdc6d85fa641e4033d26`.
+- Previous submitted implementation HEAD `b098b231c9ab3f6d35201a5a91828c3d5632d3ca` is historical.
 - Phase 1 status: `PENDING_ALPHA_REVIEW`; PR #5 is Open, Draft, and Unmerged. `main` was not modified.
 - Test evidence is agent-reported, not independently rerun by ALPHA: focused tests **55 passed**; full suite **98 passed** on Python 3.10.11 using the plugin-disabled commands below. No combined status checks were reported for the latest reviewed commit; CI is not claimed as passed.
 - Plain `python -m pytest -q tests/test_kucoin.py` fails during collection when global plugin autoload loads `web3.tools.pytest_ethereum`, which cannot import `ContractName` from `eth_typing`.
@@ -408,7 +409,7 @@ These are the actual Python 3.10.11 results; no live KuCoin endpoint or real API
 
 **Status:** `PENDING_ALPHA_REVIEW` — no ALPHA acceptance is claimed.
 **Branch:** `feature/phase-1-kucoin-integration`; PR #5 remains open and Draft.
-**Submitted HEAD:** `b098b231c9ab3f6d35201a5a91828c3d5632d3ca`.
+**Submitted HEAD at this historical correction:** `b098b231c9ab3f6d35201a5a91828c3d5632d3ca` (superseded by `cd07970b32396fed478fcdc6d85fa641e4033d26`).
 **Python:** `3.10.11`
 
 - WebSocket ticker parsing now reads `Time`; REST Level 1 reads `time`. Timestamp tests cover seconds, milliseconds, nanoseconds, UTC normalization, and source-specific field selection. Invalid or absent exchange time remains `None`; local receipt time is not used as a substitute.
@@ -421,4 +422,14 @@ These are the actual Python 3.10.11 results; no live KuCoin endpoint or real API
 
 ## Documentation consistency correction (2026-11-20)
 
-This update reconciles current-state references across `PROGRESS.md`, `docs/PROJECT_STATUS.md`, this report, and `docs/agents/IMPLEMENTATION_STATE.md`. The Phase 2 metadata-persistence snapshot and earlier implementation SHAs remain historical records; current submitted implementation HEAD is `b098b231c9ab3f6d35201a5a91828c3d5632d3ca` on `feature/phase-1-kucoin-integration`. Current status remains `PENDING_ALPHA_REVIEW`, PR #5 remains Open, Draft, and Unmerged, and `main` was not modified. The 55 focused and 98 full test results are agent-reported; ALPHA has not independently rerun them. No combined status checks were reported for the latest reviewed commit, and no CI pass is claimed.
+This update records the previous documentation reconciliation. At that time, `b098b231c9ab3f6d35201a5a91828c3d5632d3ca` was the submitted implementation HEAD. That SHA is now historical; the current submitted branch HEAD before the final reference correction is `cd07970b32396fed478fcdc6d85fa641e4033d26` on `feature/phase-1-kucoin-integration`. Current status remains `PENDING_ALPHA_REVIEW`, PR #5 remains Open, Draft, and Unmerged, and `main` was not modified. The 55 focused and 98 full test results are agent-reported; ALPHA has not independently rerun them. No combined status checks were reported for the latest reviewed commit, and no CI pass is claimed.
+
+## Final submitted HEAD reference correction (2026-11-20)
+
+- Repository: `elvito2808/Trading-Management-Platform`.
+- Branch: `feature/phase-1-kucoin-integration`.
+- Previous submitted HEAD: `b098b231c9ab3f6d35201a5a91828c3d5632d3ca` (historical implementation submission).
+- New documentation correction HEAD: `cd07970b32396fed478fcdc6d85fa641e4033d26`. This was the current submitted branch HEAD before this task's documentation-only commit.
+- This task corrects current submitted HEAD references only; no implementation code or tests changed, and no tests were rerun.
+- Test results remain agent-reported: focused 55 passed and full suite 98 passed. ALPHA has not independently rerun them.
+- PR #5 remains Open, Draft, and Unmerged. `main` was not modified. ALPHA acceptance has not occurred; status remains `PENDING_ALPHA_REVIEW`.

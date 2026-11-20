@@ -3,7 +3,8 @@
 **Repository:** https://github.com/elvito2808/Trading-Management-Platform  
 **Status snapshot date:** 2026-11-20  
 **Current implementation branch:** `feature/phase-1-kucoin-integration`
-**Current submitted HEAD:** `b098b231c9ab3f6d35201a5a91828c3d5632d3ca`
+**Current submitted HEAD:** `cd07970b32396fed478fcdc6d85fa641e4033d26`
+**Previous submitted implementation HEAD (historical):** `b098b231c9ab3f6d35201a5a91828c3d5632d3ca`
 **Current phase status:** `PENDING_ALPHA_REVIEW`
 **PR #5:** Open, Draft, Unmerged. `main` was not modified.
 **Test evidence:** Agent-reported, not independently rerun by ALPHA; focused 55 passed, full 98 passed on Python 3.10.11 with plugin autoload disabled. No combined status checks were reported for the latest reviewed commit; CI is not claimed as passed.
@@ -98,8 +99,8 @@ This was an environment/access blocker, not an application-code failure. Agent 0
 
 ## 8. Latest Phase 1 continuation
 
-- Branch: `feature/phase-1-kucoin-integration`; submitted HEAD: `b098b231c9ab3f6d35201a5a91828c3d5632d3ca`; PR #5 remains Open, Draft, and Unmerged.
-- Historical implementation commit: `d03e709ca3d9914ceebdbaea02cbb5ae71e4d1ce`; the submitted HEAD also includes the final timestamp and fixed-fee corrections.
+- Branch: `feature/phase-1-kucoin-integration`; current submitted HEAD: `cd07970b32396fed478fcdc6d85fa641e4033d26`; PR #5 remains Open, Draft, and Unmerged.
+- Previous submitted implementation HEAD: `b098b231c9ab3f6d35201a5a91828c3d5632d3ca` (historical). Earlier implementation commit `d03e709ca3d9914ceebdbaea02cbb5ae71e4d1ce` is also historical.
 - The adapter now uses only Level 1 Best Bid/Ask for REST market data; a single Classic Spot/Margin public WebSocket connection serves configured symbols and reconnects with bounded backoff.
 - The project-wide fee estimate is a fixed `Decimal("0.001")`; pair-specific and basic fee endpoints are not called. Trade quantities are supplied explicitly per symbol and are never rounded or derived from balances.
 - Agent-reported on Python 3.10.11, not independently rerun by ALPHA: with `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1`, focused KuCoin tests: 55 passed; complete suite: 98 passed. Plain pytest plugin auto-loading is blocked by a pre-existing global `web3`/`eth_typing` plugin import error; exact commands are in the handoff report.
