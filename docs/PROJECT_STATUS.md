@@ -3,11 +3,11 @@
 **Repository:** https://github.com/elvito2808/Trading-Management-Platform  
 **Status snapshot date:** 2026-11-20  
 **Current implementation branch:** `feature/phase-2-bsc-pancakeswap-integration`
-**Current submitted HEAD:** `24842491e1cf6a55a5a4bb6c8a5ebdf73e36b80f`
+**Current submitted HEAD:** `ad75b0ff9433d3a22b651f686b5d123899377c6e`
 **Previous submitted implementation HEAD (historical):** `b098b231c9ab3f6d35201a5a91828c3d5632d3ca`
 **Current phase status:** `PARTIALLY COMPLETED`
 **PR #5:** Open, Draft, Unmerged; submitted head `316829506217cb817c69f04af5eaa9614a29feff`. `main` was not modified.
-**PR #6:** Open, Draft, Unmerged; submitted head `24842491e1cf6a55a5a4bb6c8a5ebdf73e36b80f`. `main` was not modified.
+**PR #6:** Open, Draft, Unmerged; submitted head `ad75b0ff9433d3a22b651f686b5d123899377c6e`. `main` was not modified.
 **Test evidence:** Agent-reported Phase 2 results, not independently rerun in this documentation reconciliation: focused 55 passed/7 skipped; full 146 passed/7 skipped. No CI checks were reported; CI is not claimed as passed.
 **Authoritative baseline:** `main` at `6cb4d2d2d9e6ec00310c672cf822ee46db5e5c22`  
 **Status branch:** `feature/phase-2-bsc-pancakeswap-integration`
@@ -28,7 +28,7 @@
 |---|---|---|---|
 | Phase 0 | Repository audit and architecture | ACCEPTED | ALPHA's read-only audit; no code changes were part of that phase |
 | Phase 1 | KuCoin integration | ACCEPTED WITH DEFERRED VALIDATION ITEMS | PR #5 remains Open, Draft, and Unmerged at submitted head `316829506217cb817c69f04af5eaa9614a29feff`; deferred items remain documented in the Agent 01 report. |
-| Phase 2 | Blockchain and DEX integration | PARTIALLY COMPLETED | [Draft PR #6](https://github.com/elvito2808/Trading-Management-Platform/pull/6) is Open, Draft, and Unmerged at `24842491e1cf6a55a5a4bb6c8a5ebdf73e36b80f`; agent evidence records 55 passed/7 skipped focused and 146 passed/7 skipped full, but live quote/dry-run validation remains blocked by public RPC failures. |
+| Phase 2 | Blockchain and DEX integration | PARTIALLY COMPLETED | [Draft PR #6](https://github.com/elvito2808/Trading-Management-Platform/pull/6) is Open, Draft, and Unmerged at `ad75b0ff9433d3a22b651f686b5d123899377c6e`; agent evidence records 55 passed/7 skipped focused and 146 passed/7 skipped full, but live quote/dry-run validation remains blocked by public RPC failures. |
 | Phase 3 | Arbitrage engine | NOT STARTED | Requires market-data and quote contracts |
 | Phase 4 | Multi-strategy management | NOT STARTED | Requires strategy lifecycle/runtime design |
 | Phase 5 | Risk management and recovery | NOT STARTED | Must precede any execution readiness |

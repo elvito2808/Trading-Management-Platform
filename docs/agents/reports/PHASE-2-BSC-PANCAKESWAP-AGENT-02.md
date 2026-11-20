@@ -2,10 +2,10 @@
 
 ## Current Closeout
 
-**Authoritative current HEAD:** `24842491e1cf6a55a5a4bb6c8a5ebdf73e36b80f` on `feature/phase-2-bsc-pancakeswap-integration`.
+**Authoritative current HEAD:** `ad75b0ff9433d3a22b651f686b5d123899377c6e` on `feature/phase-2-bsc-pancakeswap-integration`.
 **PR #6:** Open, Draft, and Unmerged. `main` and PR #5 were not modified.
 **Canonical status:** Phase 0 `ACCEPTED`; Phase 1 `ACCEPTED WITH DEFERRED VALIDATION ITEMS`; Phase 2 `PARTIALLY COMPLETED`; Phases 3–7 `NOT STARTED`.
-**Historical references:** closeout predecessor `84fb93aa95ceb2f63325bcededcdb5705935ea95`; gas-semantics correction commit `58932bd5c3b49352ed4646f36df88978c36ce908`.
+**Historical references:** previous alignment HEAD `24842491e1cf6a55a5a4bb6c8a5ebdf73e36b80f`; closeout predecessor `84fb93aa95ceb2f63325bcededcdb5705935ea95`; gas-semantics correction commit `58932bd5c3b49352ed4646f36df88978c36ce908`.
 **Evidence status:** Agent-reported focused suite 55 passed/7 skipped and full suite 146 passed/7 skipped; no CI checks were reported. Live RPC quote and complete dry-run validation remain blocked. This closeout alignment is documentation-only and is not independent test verification.
 
 **Final status:** `PARTIALLY COMPLETED - LIVE VALIDATION BLOCKED` (read-only implementation delivered; complete live quote/dry-run evidence remains unavailable)
