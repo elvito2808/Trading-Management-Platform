@@ -28,7 +28,7 @@ Direction A = sell exactly 0.1 BNB for USDT (`EXACT_IN`). Direction B = buy exac
 ## Semantics worth knowing
 * Price impact excludes the protocol fee; the fee is reported separately (in the input token). `execution_price` includes both.
 * A quote is usable only if `validity == VALID`. Stale block, V2 Router mismatch, registry mismatch (e.g. `router.WETH()` != registry WBNB) make it `STALE`/`INVALID`.
-* Gas: `ESTIMATED_NODE` (real call simulated), `PARTIAL_POOL_ONLY` (V3 quoter pool-level number; **understates** real gas, flagged in the net figure), `UNKNOWN` (no number, no cost, no net figure). Gas is converted to USDT with the selected pool's pre-trade mid price (recorded) and rounded up. It is an estimate, never a payment.
+* Gas: `ESTIMATED_NODE` (real call simulated), `PARTIAL_POOL_ONLY` (V3 quoter pool-level number; **incomplete**, so no net figure and no `READY` status), `UNKNOWN` (no number, no cost, no net figure). Gas is converted to USDT with the selected pool's pre-trade mid price (recorded) and rounded up. It is an estimate, never a payment.
 * Everything is pinned to one block; every datum carries source, fetch time, block and validity.
 * Direction B on V2 and every V3 path cannot be node-simulated without an allowance, so those rely on the quoter hint or stay `UNKNOWN`.
 

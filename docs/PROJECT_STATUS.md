@@ -128,9 +128,8 @@ This was an environment/access blocker, not an application-code failure. Agent 0
 * Task ID: PHASE-2-BSC-PANCAKESWAP-INTEGRATION. Mode: READ-ONLY / DRY-RUN. Branch: `feature/phase-2-bsc-pancakeswap-integration`
   (based on `feature/phase-1-kucoin-integration`, PR #5 head). PR #5 is NOT merged. Commit: 258e5a69b676d99f7069eda4c3ceb2fbc5112794. PR: https://github.com/elvito2808/Trading-Management-Platform/pull/6.
 * Implemented: `trading_platform/dex/` (BSC adapter, V2, V3, gas, registry, dry-run). KuCoin code untouched.
-* Focused suite (Python 3.10.11): 48 passed, 7 skipped (the skipped tests are the opt-in live tests). Full suite:
+* Focused suite (Python 3.10.11): 55 passed, 7 skipped (the skipped tests are the opt-in live tests). Full suite:
   `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest -q` — 146 passed, 7 skipped.
-* Live suite: 5 passed, 1 error and 1 failure on free `https://bsc-dataseed.binance.org` after RPC TLS timeouts.
-  A second endpoint, `https://1rpc.io/bnb`, passed a chain-ID probe but timed out during suite setup before tests ran.
-  Chain ID 56 was confirmed, but full live quote/dry-run validation did not pass. See the report for exact details.
+* Live validation remained blocked after bounded preflight of new free endpoints. `https://bsc-dataseed3.binance.org` produced 4 passed, 2 failures and 1 error; `https://bsc.publicnode.com` passed setup but timed out during quote/dry-run, and its targeted quote run failed during block setup. Chain ID 56 was observed, but no complete live quote/dry-run validation passed. See the report closeout addendum for exact commands and results.
+* Closeout gas correction: `PARTIAL_POOL_ONLY` now withholds net output and reports `READY_GAS_PARTIAL`; only complete node gas can report `READY`. `UNKNOWN` continues to withhold cost and net output.
 * Full report: `docs/agents/reports/PHASE-2-BSC-PANCAKESWAP-AGENT-02.md`. Usage: `docs/BSC_PANCAKESWAP_INTEGRATION.md`.

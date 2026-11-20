@@ -62,7 +62,7 @@ class DirectionReport:
     net_basis: str
     plan: Optional[NonSendablePlan]
     validation_errors: tuple[str, ...]
-    status: str  # READY | READY_GAS_UNKNOWN | NOT_READY
+    status: str  # READY | READY_GAS_PARTIAL | READY_GAS_UNKNOWN | NOT_READY
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -191,6 +191,8 @@ class DryRunPreparer:
             status = "NOT_READY"
         elif gas is None or gas.status is GasStatus.UNKNOWN:
             status = "READY_GAS_UNKNOWN"
+        elif gas.status is GasStatus.PARTIAL_POOL_ONLY:
+            status = "READY_GAS_PARTIAL"
         else:
             status = "READY"
         plan = None if selected is None else NonSendablePlan(
@@ -207,12 +209,13 @@ class DryRunPreparer:
     def _net(direction: Direction, quote: SwapQuote, gas: GasEstimate, usdt: TokenInfo) -> tuple[Optional[TokenAmount], str]:
         if gas.cost_usdt is None or gas.status is GasStatus.UNKNOWN:
             return None, "gas unknown: net figure withheld rather than computed with an invented gas cost"
-        qualifier = (" (gas understated: pool-level estimate only)" if gas.status is GasStatus.PARTIAL_POOL_ONLY else "")
+        if gas.status is GasStatus.PARTIAL_POOL_ONLY:
+            return None, "gas partial: net figure withheld because pool-level gas excludes complete transaction overhead"
         if direction is Direction.BNB_TO_USDT:
             raw = quote.amount_out.raw - gas.cost_usdt.raw
-            return usdt.amount(raw), f"net USDT received = quoted USDT out - estimated gas in USDT{qualifier}"
+            return usdt.amount(raw), "net USDT received = quoted USDT out - estimated complete gas in USDT"
         raw = quote.amount_in.raw + gas.cost_usdt.raw
-        return usdt.amount(raw), f"net USDT paid to obtain exactly 0.1 BNB = quoted USDT in + estimated gas in USDT{qualifier}"
+        return usdt.amount(raw), "net USDT paid to obtain exactly 0.1 BNB = quoted USDT in + estimated complete gas in USDT"
 
     def _validate(self, direction: Direction, block: BlockInfo, selected: Optional[SwapQuote],
                   v2: Optional[SwapQuote], v3: Optional[SwapQuote], fixed: TokenAmount) -> list[str]:

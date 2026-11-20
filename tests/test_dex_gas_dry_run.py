@@ -89,11 +89,11 @@ class DryRunTests(unittest.TestCase):
         self.assertEqual(a.selected.dex, "PancakeSwap V3")
         self.assertEqual(max(q.amount_out.raw for q in (a.v2_quote, a.v3_best)), a.selected.amount_out.raw)
         self.assertEqual(min(q.amount_in.raw for q in (b.v2_quote, b.v3_best)), b.selected.amount_in.raw)
-        self.assertEqual(a.status, "READY")  # quoter gas hint gives PARTIAL gas
+        self.assertEqual(a.status, "READY_GAS_PARTIAL")  # pool-only gas cannot claim READY
         self.assertEqual(a.gas.status, GasStatus.PARTIAL_POOL_ONLY)
-        self.assertEqual(a.net_output.raw, a.selected.amount_out.raw - a.gas.cost_usdt.raw)
-        self.assertEqual(b.net_output.raw, b.selected.amount_in.raw + b.gas.cost_usdt.raw)
-        self.assertIn("understated", a.net_basis)
+        self.assertIsNone(a.net_output)
+        self.assertIsNone(b.net_output)
+        self.assertIn("withheld", a.net_basis)
 
     def test_v2_only_node_gas_estimate(self):
         chain, bsc, prep = make(sender=SENDER)

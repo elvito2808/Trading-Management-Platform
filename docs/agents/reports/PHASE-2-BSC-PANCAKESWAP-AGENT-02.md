@@ -1,6 +1,6 @@
 # AGENT 02 REPORT - PHASE-2-BSC-PANCAKESWAP-INTEGRATION
 
-**Final status: `DELIVERED - PENDING ALPHA REVIEW`** (source and documentation pushed; live quote validation remains incomplete)
+**Final status: `PARTIALLY COMPLETED - LIVE VALIDATION BLOCKED** (read-only implementation delivered; complete live quote/dry-run evidence remains unavailable)
 Date: 2026-11-20 | Mode: READ-ONLY / DRY-RUN | Network: BSC Mainnet (chain 56)
 
 ## 1. Summary
@@ -104,3 +104,19 @@ The mock/unit cases verified all required states: `ESTIMATED_NODE` is sourced on
 ### Delivery
 
 Confirmed source change: one bounded regression test assertion update in `tests/test_dex_pancakeswap.py`; no runtime implementation correction was required. The initial validation commit is `33415a9`; the report-SHA finalization commit is recorded by the delivery agent. Keep PR #6 Open, Draft, and Unmerged.
+
+## 9. Alpha closeout preflight (2026-11-20)
+
+No ABI research or previously attempted endpoint was repeated. The following previously untested free public endpoints received one bounded `eth_chainId` POST preflight at approximately `2026-11-20T22:00Z`, PowerShell `Invoke-RestMethod`, `-TimeoutSec 6`: `https://bsc-dataseed2.binance.org` -> chain 56 in 4429 ms; `https://bsc-dataseed3.binance.org` -> chain 56 in 3113 ms; `https://bsc-dataseed4.binance.org` -> chain 56 in 5263 ms; `https://bsc-dataseed1.defibit.io` -> timeout at 6026 ms; `https://bsc-dataseed1.ninicoin.io` -> chain 56 in 3038 ms; `https://bsc.publicnode.com` -> chain 56 in 3779 ms.
+
+The complete live command was run against `https://bsc-dataseed3.binance.org` with `RUN_LIVE_BSC_TESTS=1 BSC_RPC_TIMEOUT_SECONDS=5 BSC_RPC_MAX_RETRIES=0`: `python -m unittest discover -s tests -p "test_dex_live_rpc.py" -v`. It reached chain/health, token metadata, V2 deployment/pair, then failed V3 tier discovery (`enabled fee tiers: ()`), hit `missing trie node` during V2 quote setup, and the dry-run returned zero directions. Result: **4 passed, 2 failures, 1 error** in 144.438s; block `134770716`, block timestamp `2026-11-20T21:54:38Z`.
+
+The complete live command was also attempted against `https://bsc.publicnode.com` with the same bounded settings. It passed setup through V3 pool/tier discovery and did not complete the quote/dry-run phase within the bounded per-call behavior; the process was stopped after prolonged RPC timeouts. A single targeted quote command, `python -m unittest tests.test_dex_live_rpc.LiveBscTests.test_06_quotes_both_dexes_both_directions -v`, with `BSC_RPC_TIMEOUT_SECONDS=3 BSC_RPC_MAX_RETRIES=0`, then failed in `setUpClass` while `eth_getBlockByNumber` timed out; **0 tests ran**.
+
+No new endpoint provided a complete, stable quote run. V2 exact-input/exact-output, V2 Router cross-checks, V3 exact-input/exact-output, and complete live Dry-Run therefore remain unverified. Phase 2 remains **PARTIALLY COMPLETED**. The existing gas audit remains valid: `PARTIAL_POOL_ONLY` is not complete transaction gas and cannot claim complete profitability or `READY`; `UNKNOWN` produces no fabricated gas cost or net result. No code defect was confirmed and no runtime code was changed.
+
+## 10. Alpha closeout correction
+
+The closeout audit identified and corrected one bounded gas-semantics defect: `PARTIAL_POOL_ONLY` previously produced a net figure and status `READY` with only an understatement qualifier. It now retains the explicit pool-level gas estimate but withholds `net_output` and reports `READY_GAS_PARTIAL`; only a complete node estimate can report `READY`. `UNKNOWN` behavior remains unchanged and withholds both cost and net output. Focused and full suites remained **55 passed, 7 skipped** and **146 passed, 7 skipped**, respectively, after the correction. The correction is covered by `tests/test_dex_gas_dry_run.py`.
+
+Closeout changes are pending commit from starting HEAD `f22cbe6672604b63d6b603a8b5831eda1c0d5a89`. Keep PR #6 Open, Draft, and Unmerged.
