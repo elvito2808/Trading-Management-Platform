@@ -1,3 +1,6 @@
+
+> **Successor ALPHA handoff — authoritative current state (2026-11-20):** This ledger contains historical planning tables and stale Phase 1 pending-review fields. Read [docs/ALPHA_SUCCESSOR_HANDOFF.md](../ALPHA_SUCCESSOR_HANDOFF.md) first; it is the reconciled manager handoff. Current phase disposition: Phase 0 **ACCEPTED**; Phase 1 KuCoin **ACCEPTED WITH DEFERRED VALIDATION ITEMS** (PR #5 Open/Draft/Unmerged, HEAD `316829506217cb817c69f04af5eaa9614a29feff`); Phase 2 BSC/PancakeSwap **PARTIALLY COMPLETED** (PR #6 Open/Draft/Unmerged, HEAD `f22cbe6672604b63d6b603a8b5831eda1c0d5a89`); Phases 3–7 **NOT STARTED**. The Phase 2 remaining live gate is successful read-only V2/V3 quotes in both directions plus complete live Dry-Run; the latest bounded attempts failed on public RPC timeouts / missing trie node. Do not infer success from ABI/unit tests. Phase 3 is gated until Phase 2 acceptance unless the owner explicitly changes sequencing. All safety/governance rules are in the handoff.
+
 # Living Implementation State & Handoff Ledger
 
 **Repository:** https://github.com/elvito2808/Trading-Management-Platform
