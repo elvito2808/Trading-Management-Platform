@@ -20,7 +20,7 @@
 | Phase | Scope | Status | Evidence / notes |
 |---|---|---|---|
 | Phase 0 | Repository audit and architecture | ACCEPTED | ALPHA's read-only audit; no code changes were part of that phase |
-| Phase 1 | KuCoin integration | PENDING_ALPHA_REVIEW | PR #5 is open and Draft. The review corrections are implemented on `feature/phase-1-kucoin-integration`; final correction commit and test results are recorded in the Agent 01 report. |
+| Phase 1 | KuCoin integration | PENDING_ALPHA_REVIEW | PR #5 is open and Draft. Corrections are committed on `feature/phase-1-kucoin-integration` at `a85f233975eafba627f01eb679354122f7a14ca0`; see the Agent 01 report for test results. |
 | Phase 2 | Blockchain and DEX integration | NOT STARTED | Depends on agreed chain/DEX scope and stable adapter contracts |
 | Phase 3 | Arbitrage engine | NOT STARTED | Requires market-data and quote contracts |
 | Phase 4 | Multi-strategy management | NOT STARTED | Requires strategy lifecycle/runtime design |

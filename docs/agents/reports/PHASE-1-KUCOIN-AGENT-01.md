@@ -291,7 +291,7 @@ Full result: `69 passed in 0.90s`.
 **Review:** https://github.com/elvito2808/Trading-Management-Platform/pull/5#issuecomment-7028142696
 **Working branch:** `feature/phase-1-kucoin-integration`
 **PR:** https://github.com/elvito2808/Trading-Management-Platform/pull/5
-**Correction commit:** pending commit; this follow-up will be added to PR #5 without rewriting history.
+**Correction commit:** `a85f233975eafba627f01eb679354122f7a14ca0`
 
 ### Corrections made
 
@@ -321,3 +321,10 @@ Result: `98 passed in 1.56s`.
 - This adapter requests one fee symbol at a time (the documented endpoint supports up to 10).
 - Order-book retrieval remains a REST snapshot; WebSocket synchronization is not implemented.
 - No order submission or account-changing operation is present.
+
+### Delivery
+
+- Correction commit: `a85f233975eafba627f01eb679354122f7a14ca0`
+- PR #5 remains open and Draft; no second PR was created and no merge was performed.
+- Final status: `PENDING_ALPHA_REVIEW`
+- Exact next action: push this correction commit and documentation update to the existing PR #5 branch.

@@ -48,11 +48,11 @@ Append a newest-first entry for each merged/accepted PR:
 - Agent: AGENT-01-KUCOIN
 - Objective: Implement a modular read-only KuCoin integration and dry-run order preparation.
 - Files/contracts reserved: `trading_platform/exchanges/`, `tests/test_kucoin.py`, KuCoin integration docs
-- Last verified commit before corrections: `a954ebdded9ce8a1ad33352afce236f0730a50c2`; correction changes are pending commit
-- Checks run and results: initial baseline `43 passed`; initial focused/full `26`/`69` passed; correction focused suite `54 passed`
+- Last verified correction commit: `a85f233975eafba627f01eb679354122f7a14ca0`
+- Checks run and results: initial baseline `43 passed`; initial focused/full `26`/`69` passed; corrected Python 3.10 focused/full suites `55`/`98` passed
 - Blockers: live private-account and private-fee connectivity unverified without a real read-only key
-- Next concrete action: finish corrections, run focused and full tests, commit and push to PR #5, then have ALPHA perform independent acceptance review
-- Ledger updated in PR: yes, branch correction pending push
+- Next concrete action: push correction commit to PR #5 and have ALPHA perform independent acceptance review
+- Ledger updated in PR: yes
 
 ## Shared interface decisions
 Record decisions here or link ADRs. Do not let agents independently invent overlapping interfaces.
