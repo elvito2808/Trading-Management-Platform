@@ -129,3 +129,21 @@ The required branch was rechecked before updating: `feature/arbitrage-live-integ
   A second endpoint, `https://1rpc.io/bnb`, passed a chain-ID probe but timed out during suite setup before tests ran.
   Chain ID 56 was confirmed, but full live quote/dry-run validation did not pass. See the report for exact details.
 * Full report: `docs/agents/reports/PHASE-2-BSC-PANCAKESWAP-AGENT-02.md`. Usage: `docs/BSC_PANCAKESWAP_INTEGRATION.md`.
+
+
+---
+
+## Successor ALPHA handoff — authoritative snapshot (2026-11-20)
+
+**This section supersedes stale current-state headers and older pending-review statements above.** Historical entries are retained for chronology; do not treat them as current.
+
+Read the complete [Successor ALPHA Handoff](docs/ALPHA_SUCCESSOR_HANDOFF.md) before continuing.
+
+- Phase 0: **ACCEPTED**.
+- Phase 1 KuCoin: **ACCEPTED WITH DEFERRED VALIDATION ITEMS**. PR #5 remains Open/Draft/Unmerged; submitted HEAD `316829506217cb817c69f04af5eaa9614a29feff`. Agent-reported focused tests 55 passed; full suite 98 passed. Live public WS/REST, private balance and end-to-end Paper Trading remain unvalidated.
+- Phase 2 BSC/PancakeSwap V2/V3: **PARTIALLY COMPLETED**. PR #6 remains Open/Draft/Unmerged; HEAD `f22cbe6672604b63d6b603a8b5831eda1c0d5a89`. Agent 04 ABI verification and regression assertions completed. Mock/unit 55 passed, 7 skipped; full suite 146 passed, 7 skipped. Live RPC at `bsc-dataseed.binance.org`: 5 passed, 1 error, 1 failure; `bsc-dataseed1.binance.org`: 2 passed, 4 errors, 1 failure. No complete V2/V3 live quotes in both directions and no complete live Dry-Run.
+- Phase 3 Arbitrage Engine, Phase 4 Multi-Strategy Management, Phase 5 Risk/Recovery, Phase 6 integrated Testing/Validation, Phase 7 readiness: **NOT STARTED**.
+- Phase 3 remains gated on Phase 2 acceptance unless the owner explicitly changes sequencing.
+- All execution remains Dry-Run only. No signing, broadcasting, real orders/swaps, approvals, transfers, withdrawals, direct main writes, merges, force-pushes, secrets, or paid infrastructure without explicit owner authorization.
+- Handoff documentation branch: `docs/alpha-successor-handoff`, created from Phase 2 HEAD. No source implementation changes were made in the handoff.
+
