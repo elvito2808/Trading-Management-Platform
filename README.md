@@ -41,4 +41,4 @@ Identifiers are generated as UUIDs unless explicitly supplied. Use returned IDs 
 
 No exchange order execution, wallet signing, blockchain transaction submission, automated strategies, bot execution, or real-money trading is implemented. A separate read-only BSC/PancakeSwap RPC quote and dry-run integration is documented in [BSC_PANCAKESWAP_INTEGRATION.md](docs/BSC_PANCAKESWAP_INTEGRATION.md); it does not sign, submit, or execute transactions.
 
-See `docs/` for architecture, schema, CLI, readiness, decisions, and roadmap. `PROGRESS.md` records the verified repository state.
+See `docs/` for architecture, schema, CLI, readiness, decisions, and roadmap. `PROGRESS.md` records the verified repository state. The current manager transition and reconciled phase/rule ledger is [docs/ALPHA_SUCCESSOR_HANDOFF.md](docs/ALPHA_SUCCESSOR_HANDOFF.md).
