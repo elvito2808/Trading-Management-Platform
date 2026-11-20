@@ -24,7 +24,7 @@ Update status values only with evidence: `NOT STARTED`, `IN PROGRESS`, `BLOCKED`
 |---|---|---|---|---|---|
 | Baseline & docs gaps | Agent 0 + Agent 6 | NOT STARTED | Existing main state | — | Re-audit docs and CI; establish acceptance checklist |
 | Core/Data maintenance | Agent 1 | ACCEPTED (Phase 2 documented) | Baseline | Phase 2 evidence in PROGRESS.md; revalidate | Avoid duplicate rebuild; handle concrete gaps only |
-| Exchange/Market Data & Wallet | Agent 2 | NOT STARTED | Core interfaces; security design | — | Public read-only market-data vertical slice first |
+| Exchange/Market Data & Wallet | Agent 2 | IN REVIEW | Core interfaces; security design | Task branch implementation and mocked tests | ALPHA acceptance review remains required |
 | Strategy & Risk | Agent 3 | NOT STARTED | Core/Data; market data contracts | — | Start definitions/signals and deterministic risk contracts |
 | Execution/Portfolio/Simulation | Agent 4 | NOT STARTED | Strategy/Risk contracts | — | Paper-only simulation before execution adapters |
 | API & UI | Agent 5 | NOT STARTED | Stable application services and DTOs | — | API contract proposal before implementation |
@@ -44,15 +44,15 @@ Append a newest-first entry for each merged/accepted PR:
 - Known limitations / follow-up issue links:
 
 ## In-progress work / handoff
-- Current active branch / PR:
-- Agent:
-- Objective:
-- Files/contracts reserved:
-- Last verified commit:
-- Checks run and results:
-- Blockers:
-- Next concrete action:
-- Ledger updated in PR: yes/no
+- Current active branch / PR: `feature/phase-1-kucoin-integration`; Draft PR pending branch push
+- Agent: AGENT-01-KUCOIN
+- Objective: Implement a modular read-only KuCoin integration and dry-run order preparation.
+- Files/contracts reserved: `trading_platform/exchanges/`, `tests/test_kucoin.py`, KuCoin integration docs
+- Last verified commit: updated on the task branch after implementation commit
+- Checks run and results: baseline `43 passed`; focused `26 passed`; full `69 passed`
+- Blockers: live private-account and private-fee connectivity unverified without a real read-only key
+- Next concrete action: push task branch, create Draft PR, and have ALPHA perform independent acceptance review
+- Ledger updated in PR: pending PR
 
 ## Shared interface decisions
 Record decisions here or link ADRs. Do not let agents independently invent overlapping interfaces.
