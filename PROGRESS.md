@@ -26,7 +26,7 @@ The live default branch was `main`. It contained a Python 3.10+ Modular Monolith
 
 Existing foundation components were retained. No external Arbitrage project or other trading project was inspected, copied, or used.
 
-## Historical Phase 2 implementation
+## Superseded historical Phase 2 implementation
 
 - Typed domain models: Network, Token, Contract, ABI, Asset, TradingPair, TradingVenue, Market, FeeMetadata.
 - UUID identifiers, UTC timestamps, model validation, dictionary serialization/deserialization.
@@ -49,7 +49,7 @@ Existing foundation components were retained. No external Arbitrage project or o
 6. CLI create/update uses JSON object prompts for predictable typed input and future extensibility.
 7. No real trading, exchange API, wallet, RPC, signing, transaction, market-data, or execution functionality was added.
 
-## Historical Phase 2 verification
+## Superseded historical Phase 2 verification
 
 **GitHub Actions run:** https://github.com/sina1991/Trading-Management-Platform/actions/runs/42648912267  
 **Verified head commit:** `5781e1583438bc057a95cc85fb3f01f8e874e644`  
@@ -71,7 +71,7 @@ Tables: `networks`, `tokens`, `contracts`, `abis`, `assets`, `trading_pairs`, `v
 
 Back up before migrations or manual maintenance. With WAL active, stop/close/checkpoint before copying only the main database file; if copying while open, retain WAL/SHM files. Restore only with the application stopped. Startup never drops or resets existing data.
 
-## Historical Phase 2 delivery state
+## Superseded historical Phase 2 delivery state
 
 - Working branch: `phase2/metadata-persistence`
 - PR: https://github.com/sina1991/Trading-Management-Platform/pull/1 (merged)
