@@ -1,5 +1,13 @@
 # AGENT 02 REPORT - PHASE-2-BSC-PANCAKESWAP-INTEGRATION
 
+## Current Closeout
+
+**Authoritative current HEAD:** `24842491e1cf6a55a5a4bb6c8a5ebdf73e36b80f` on `feature/phase-2-bsc-pancakeswap-integration`.
+**PR #6:** Open, Draft, and Unmerged. `main` and PR #5 were not modified.
+**Canonical status:** Phase 0 `ACCEPTED`; Phase 1 `ACCEPTED WITH DEFERRED VALIDATION ITEMS`; Phase 2 `PARTIALLY COMPLETED`; Phases 3–7 `NOT STARTED`.
+**Historical references:** closeout predecessor `84fb93aa95ceb2f63325bcededcdb5705935ea95`; gas-semantics correction commit `58932bd5c3b49352ed4646f36df88978c36ce908`.
+**Evidence status:** Agent-reported focused suite 55 passed/7 skipped and full suite 146 passed/7 skipped; no CI checks were reported. Live RPC quote and complete dry-run validation remain blocked. This closeout alignment is documentation-only and is not independent test verification.
+
 **Final status:** `PARTIALLY COMPLETED - LIVE VALIDATION BLOCKED` (read-only implementation delivered; complete live quote/dry-run evidence remains unavailable)
 Date: 2026-11-20 | Mode: READ-ONLY / DRY-RUN | Network: BSC Mainnet (chain 56)
 
@@ -119,4 +127,4 @@ No new endpoint provided a complete, stable quote run. V2 exact-input/exact-outp
 
 The closeout audit identified and corrected one bounded gas-semantics defect: `PARTIAL_POOL_ONLY` previously produced a net figure and status `READY` with only an understatement qualifier. It now retains the explicit pool-level gas estimate but withholds `net_output` and reports `READY_GAS_PARTIAL`; only a complete node estimate can report `READY`. `UNKNOWN` behavior remains unchanged and withholds both cost and net output. Focused and full suites remained **55 passed, 7 skipped** and **146 passed, 7 skipped**, respectively, after the correction. The correction is covered by `tests/test_dex_gas_dry_run.py`.
 
-Closeout implementation and test correction are committed as `58932bd5c3b49352ed4646f36df88978c36ce908` from starting HEAD `f22cbe6672604b63d6b603a8b5831eda1c0d5a89`; current closeout HEAD is `84fb93aa95ceb2f63325bcededcdb5705935ea95`. Keep PR #6 Open, Draft, and Unmerged.
+Closeout implementation and test correction are committed as `58932bd5c3b49352ed4646f36df88978c36ce908` from starting HEAD `f22cbe6672604b63d6b603a8b5831eda1c0d5a89`; the pre-alignment closeout HEAD `84fb93aa95ceb2f63325bcededcdb5705935ea95` is historical. The authoritative current HEAD is recorded in **Current Closeout** above. Keep PR #6 Open, Draft, and Unmerged.

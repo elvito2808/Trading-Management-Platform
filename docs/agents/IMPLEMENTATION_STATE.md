@@ -3,10 +3,10 @@
 **Repository:** https://github.com/elvito2808/Trading-Management-Platform
 **Default branch:** `main`
 **Ledger owner:** Agent 0 (Orchestrator); every implementing agent must update it in its own PR.
-**Current submitted HEAD:** `84fb93aa95ceb2f63325bcededcdb5705935ea95` on `feature/phase-2-bsc-pancakeswap-integration`.
+**Current submitted HEAD:** `24842491e1cf6a55a5a4bb6c8a5ebdf73e36b80f` on `feature/phase-2-bsc-pancakeswap-integration`.
 **Previous submitted implementation HEAD (historical):** `b098b231c9ab3f6d35201a5a91828c3d5632d3ca`.
 **Phase 1 status:** `ACCEPTED WITH DEFERRED VALIDATION ITEMS`; PR #5 is Open, Draft, and Unmerged at submitted head `316829506217cb817c69f04af5eaa9614a29feff`. `main` was not modified.
-**Phase 2 status:** `PARTIALLY COMPLETED`; PR #6 is Open, Draft, and Unmerged at submitted head `84fb93aa95ceb2f63325bcededcdb5705935ea95`.
+**Phase 2 status:** `PARTIALLY COMPLETED`; PR #6 is Open, Draft, and Unmerged at submitted head `24842491e1cf6a55a5a4bb6c8a5ebdf73e36b80f`.
 **Current evidence:** Agent-reported Phase 2 focused suite 55 passed/7 skipped and full suite 146 passed/7 skipped; no CI checks were reported. This ledger update is documentation-only and is not independent test verification.
 **Last reviewed:** 2026-11-20 (submitted branch state; ALPHA acceptance has not occurred).
 
@@ -30,7 +30,7 @@ Update status values only with evidence: `NOT STARTED`, `IN PROGRESS`, `BLOCKED`
 | Baseline & docs gaps | Agent 0 + Agent 6 | NOT STARTED | Existing main state | — | Re-audit docs and CI; establish acceptance checklist |
 | Core/Data maintenance | Agent 1 | ACCEPTED (Phase 2 documented) | Baseline | Phase 2 evidence in PROGRESS.md; revalidate | Avoid duplicate rebuild; handle concrete gaps only |
 | Exchange/Market Data & Wallet | Agent 2 | ACCEPTED WITH DEFERRED VALIDATION ITEMS | Core interfaces; security design | [PR #5](https://github.com/elvito2808/Trading-Management-Platform/pull/5), submitted head `316829506217cb817c69f04af5eaa9614a29feff` | Deferred validation items remain in the Agent 01 report; PR stays Open, Draft, and Unmerged |
-| BSC / PancakeSwap read-only integration | Agent 02 | PARTIALLY COMPLETED | Phase 1 PR #5 head | [Draft PR #6](https://github.com/elvito2808/Trading-Management-Platform/pull/6), current head `84fb93aa95ceb2f63325bcededcdb5705935ea95`, correction commit `58932bd5c3b49352ed4646f36df88978c36ce908` | Live quote/dry-run validation remains blocked by free public RPC failures; no CI checks reported |
+| BSC / PancakeSwap read-only integration | Agent 02 | PARTIALLY COMPLETED | Phase 1 PR #5 head | [Draft PR #6](https://github.com/elvito2808/Trading-Management-Platform/pull/6), current head `24842491e1cf6a55a5a4bb6c8a5ebdf73e36b80f`, historical predecessor `84fb93aa95ceb2f63325bcededcdb5705935ea95`, correction commit `58932bd5c3b49352ed4646f36df88978c36ce908` | Live quote/dry-run validation remains blocked by free public RPC failures; no CI checks reported |
 | Strategy & Risk | Agent 3 | NOT STARTED | Core/Data; market data contracts | — | Start definitions/signals and deterministic risk contracts |
 | Execution/Portfolio/Simulation | Agent 4 | NOT STARTED | Strategy/Risk contracts | — | Paper-only simulation before execution adapters |
 | API & UI | Agent 5 | NOT STARTED | Stable application services and DTOs | — | API contract proposal before implementation |
