@@ -1,10 +1,18 @@
 # Project Progress & Agent Handoff
 
-**Repository:** https://github.com/sina1991/Trading-Management-Platform  
-**Default branch:** `main`  
-**Implementation branch:** `phase2/metadata-persistence` (merged)  
-**Phase:** Phase 2 — Metadata Management & Persistence  
-**Status:** COMPLETE — merged into `main`; pull-request and main-branch CI verified.
+**Repository:** https://github.com/elvito2808/Trading-Management-Platform
+**Default branch:** `main`
+**Current implementation branch:** `feature/phase-1-kucoin-integration`
+**Current submitted HEAD:** `b098b231c9ab3f6d35201a5a91828c3d5632d3ca`
+**Current phase:** Phase 1 — KuCoin Integration
+**Current status:** `PENDING_ALPHA_REVIEW`
+**PR #5:** Open, Draft, Unmerged. `main` was not modified.
+
+**Current test evidence:** Agent-reported on Python 3.10.11; ALPHA has not independently rerun the tests. Focused KuCoin tests: **55 passed**; full suite: **98 passed**, using the plugin-disabled commands documented in the Agent 01 report. The latest reviewed commit had no reported combined status checks; no CI pass is claimed here.
+
+## Historical project snapshot — Phase 2 metadata and persistence
+
+The following Phase 2 material is retained as project history and is not the current implementation branch or phase. The former `phase2/metadata-persistence` branch and its merged status belong to an earlier repository snapshot.
 
 ## Initial audit
 
@@ -12,7 +20,7 @@ The live default branch was `main`. It contained a Python 3.10+ Modular Monolith
 
 Existing foundation components were retained. No external Arbitrage project or other trading project was inspected, copied, or used.
 
-## Phase 2 implementation
+## Historical Phase 2 implementation
 
 - Typed domain models: Network, Token, Contract, ABI, Asset, TradingPair, TradingVenue, Market, FeeMetadata.
 - UUID identifiers, UTC timestamps, model validation, dictionary serialization/deserialization.
@@ -35,7 +43,7 @@ Existing foundation components were retained. No external Arbitrage project or o
 6. CLI create/update uses JSON object prompts for predictable typed input and future extensibility.
 7. No real trading, exchange API, wallet, RPC, signing, transaction, market-data, or execution functionality was added.
 
-## Verification
+## Historical Phase 2 verification
 
 **GitHub Actions run:** https://github.com/sina1991/Trading-Management-Platform/actions/runs/42648912267  
 **Verified head commit:** `5781e1583438bc057a95cc85fb3f01f8e874e644`  
@@ -57,7 +65,7 @@ Tables: `networks`, `tokens`, `contracts`, `abis`, `assets`, `trading_pairs`, `v
 
 Back up before migrations or manual maintenance. With WAL active, stop/close/checkpoint before copying only the main database file; if copying while open, retain WAL/SHM files. Restore only with the application stopped. Startup never drops or resets existing data.
 
-## Delivery state
+## Historical Phase 2 delivery state
 
 - Working branch: `phase2/metadata-persistence`
 - PR: https://github.com/sina1991/Trading-Management-Platform/pull/1 (merged)
@@ -81,7 +89,7 @@ No critical Phase 2 requirement remains identified by the automated test suite. 
 Proceed only after a separate instruction: Strategy definitions and Bot Instance metadata/lifecycle management, keeping strategy logic independent of Bot lifecycle and Execution. Do not begin Phase 3 in this task.
 
 
-## Phase 1 — KuCoin integration (AGENT-01-KUCOIN)
+## Historical Phase 1 blocker record — KuCoin (AGENT-01-KUCOIN)
 
 **Status: BLOCKED — not implemented.** The isolated branch `feature/arbitrage-live-integration` was created from main commit `2ea9f39f5cd1bc97253a2eabadf1753fbc1b6ea6`. Repository inspection confirmed the Python modular-monolith package root is `trading_platform/`, with domain metadata, application services, a repository Protocol/SQLite adapter, TOML configuration, and central CLI readiness/command registry. No exchange connector exists yet.
 

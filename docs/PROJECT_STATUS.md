@@ -2,6 +2,11 @@
 
 **Repository:** https://github.com/elvito2808/Trading-Management-Platform  
 **Status snapshot date:** 2026-11-20  
+**Current implementation branch:** `feature/phase-1-kucoin-integration`
+**Current submitted HEAD:** `b098b231c9ab3f6d35201a5a91828c3d5632d3ca`
+**Current phase status:** `PENDING_ALPHA_REVIEW`
+**PR #5:** Open, Draft, Unmerged. `main` was not modified.
+**Test evidence:** Agent-reported, not independently rerun by ALPHA; focused 55 passed, full 98 passed on Python 3.10.11 with plugin autoload disabled. No combined status checks were reported for the latest reviewed commit; CI is not claimed as passed.
 **Authoritative baseline:** `main` at `6cb4d2d2d9e6ec00310c672cf822ee46db5e5c22`  
 **Status branch:** `feature/phase-1-kucoin-integration`
 **Overall project status:** IN PROGRESS
@@ -10,7 +15,7 @@
 
 - Default branch: `main`.
 - Current main commit at snapshot: `6cb4d2d2d9e6ec00310c672cf822ee46db5e5c22`.
-- Repository is a public fork of `sina1991/Trading-Management-Platform`.
+- The historical baseline was a public fork of `sina1991/Trading-Management-Platform`; the current repository is `elvito2808/Trading-Management-Platform`.
 - Main contains a Python 3.10+ modular monolith, CLI, metadata domain/services, SQLite persistence, and tests.
 - Main does not contain an implemented KuCoin adapter, DEX adapter, live market-data integration, wallet integration, arbitrage engine, or trading execution system.
 - Existing CI workflow is configured for Python 3.10, 3.11, and 3.12. No workflow runs were returned by the GitHub Actions runs API at this snapshot. This does not establish whether Actions are disabled or simply have not run.
@@ -58,7 +63,7 @@ The Phase 1 task branch `feature/phase-1-kucoin-integration` was created from th
 ## 5. Documentation trust assessment
 
 The following inherited documents contain upstream project history or status claims that must be revalidated before being treated as current:
-- root `PROGRESS.md` (identifies upstream repository `sina1991/Trading-Management-Platform` and Phase 2 completion);
+- root `PROGRESS.md` (retains historical upstream repository and Phase 2 records, now explicitly marked historical);
 - `docs/agents/IMPLEMENTATION_STATE.md` (retains inherited upstream workstream notes and an older orchestration plan; its current repository header has been reconciled).
 
 They are retained as historical records for now. This status file is the current project-specific handoff on this branch; it is not yet merged into `main`.
@@ -71,7 +76,7 @@ They are retained as historical records for now. This status file is the current
 - GitHub branches API reports `main` as protected.
 - PR #3 (`docs: establish authoritative project control and status`) remains open and Draft, with exactly two documentation files in its current reviewed diff. It has not been merged.
 - PR #5 (`feat: implement KuCoin read-only integration`) is open and Draft, targeting `alpha/repository-governance-baseline`; ALPHA requested corrections in [the PR review comment](https://github.com/elvito2808/Trading-Management-Platform/pull/5#issuecomment-7028142696).
-- Implementation commit `d03e709ca3d9914ceebdbaea02cbb5ae71e4d1ce` is on the same branch and PR. It replaces pair-specific fee retrieval with the central 0.1% fixed estimate, adds WebSocket-first Best Bid/Ask with Level 1 REST fallback, and deduplicates concurrent fallback requests.
+- Historical implementation commit `d03e709ca3d9914ceebdbaea02cbb5ae71e4d1ce` is on the same branch and PR. It replaced pair-specific fee retrieval with the central 0.1% fixed estimate, added WebSocket-first Best Bid/Ask with Level 1 REST fallback, and deduplicated concurrent fallback requests. The latest submitted HEAD is recorded in Section 8.
 - No merge is authorized by this status record.
 
 ## 7. Earlier execution environment blocker — 2026-11-20 (superseded)
@@ -93,11 +98,12 @@ This was an environment/access blocker, not an application-code failure. Agent 0
 
 ## 8. Latest Phase 1 continuation
 
-- Branch: `feature/phase-1-kucoin-integration`; PR #5 remains open, Draft, and unmerged.
-- Implementation commit: `d03e709ca3d9914ceebdbaea02cbb5ae71e4d1ce`.
+- Branch: `feature/phase-1-kucoin-integration`; submitted HEAD: `b098b231c9ab3f6d35201a5a91828c3d5632d3ca`; PR #5 remains Open, Draft, and Unmerged.
+- Historical implementation commit: `d03e709ca3d9914ceebdbaea02cbb5ae71e4d1ce`; the submitted HEAD also includes the final timestamp and fixed-fee corrections.
 - The adapter now uses only Level 1 Best Bid/Ask for REST market data; a single Classic Spot/Margin public WebSocket connection serves configured symbols and reconnects with bounded backoff.
 - The project-wide fee estimate is a fixed `Decimal("0.001")`; pair-specific and basic fee endpoints are not called. Trade quantities are supplied explicitly per symbol and are never rounded or derived from balances.
-- Python: 3.10.11. With `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1`, focused KuCoin tests: 55 passed; complete suite: 98 passed. Plain pytest plugin auto-loading is blocked by a pre-existing global `web3`/`eth_typing` plugin import error; exact commands are in the handoff report.
+- Agent-reported on Python 3.10.11, not independently rerun by ALPHA: with `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1`, focused KuCoin tests: 55 passed; complete suite: 98 passed. Plain pytest plugin auto-loading is blocked by a pre-existing global `web3`/`eth_typing` plugin import error; exact commands are in the handoff report.
+- No combined status checks were reported for the latest reviewed commit; CI is not claimed as passed. `main` was not modified.
 - No live WebSocket, private-account, order, transfer, withdrawal, deposit, cancel, or amend operation was exercised or added.
 
 ## 9. Immediate next actions
