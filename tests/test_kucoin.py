@@ -653,6 +653,24 @@ def test_rest_quote_fallback_and_stale_status_are_explicit():
     run_async(scenario())
 
 
+def test_concurrent_quote_requests_share_fresh_rest_fallback():
+    async def scenario():
+        transport = FakeTransport([response(BBA)])
+        feed = KuCoinMarketData(
+            KuCoinClient(transport=transport),
+            ["BNB-USDT"],
+            config=KuCoinMarketDataConfig(rest_min_request_interval_seconds=0.01),
+        )
+        first, second = await asyncio.gather(
+            feed.get_quote("BNB-USDT"),
+            feed.get_quote("BNB-USDT"),
+        )
+        assert first == second
+        assert len(transport.calls) == 1
+
+    run_async(scenario())
+
+
 def test_websocket_subscription_failure_reconnects_with_single_active_connection():
     async def scenario():
         client = KuCoinClient(transport=FakeTransport([response(BBA)]))

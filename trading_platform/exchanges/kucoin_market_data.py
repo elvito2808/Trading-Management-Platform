@@ -185,10 +185,19 @@ class KuCoinMarketData:
             and quote.freshness is QuoteFreshness.FRESH
         )
 
-    async def _refresh_rest_quote(self, symbol: str) -> BestBidAskQuote:
+    async def _refresh_rest_quote(
+        self, symbol: str, force: bool = False
+    ) -> BestBidAskQuote:
         if self._rest_lock is None:
             self._rest_lock = asyncio.Lock()
         async with self._rest_lock:
+            existing = self._current_quote(symbol)
+            if (
+                not force
+                and existing is not None
+                and existing.freshness is QuoteFreshness.FRESH
+            ):
+                return existing
             wait = self._next_rest_request_at - self._monotonic()
             if wait > 0:
                 await self._wait_or_stop(wait)
@@ -220,7 +229,7 @@ class KuCoinMarketData:
                     return
                 if not self._has_fresh_websocket_quote(symbol):
                     try:
-                        await self._refresh_rest_quote(symbol)
+                        await self._refresh_rest_quote(symbol, force=True)
                     except ExchangeError as exc:
                         self._set_last_error(exc)
                 if await self._wait_or_stop(self.config.rest_poll_interval_seconds):
