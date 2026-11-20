@@ -20,7 +20,7 @@
 | Phase | Scope | Status | Evidence / notes |
 |---|---|---|---|
 | Phase 0 | Repository audit and architecture | ACCEPTED | ALPHA's read-only audit; no code changes were part of that phase |
-| Phase 1 | KuCoin integration | PENDING_ALPHA_REVIEW | PR #5 is open and Draft. The latest implementation update is committed on `feature/phase-1-kucoin-integration` at `df0d4806b2bbeb76de96628c37b6d9f5992dee14`; see the Agent 01 report for exact verification and limitations. |
+| Phase 1 | KuCoin integration | PENDING_ALPHA_REVIEW | PR #5 is open and Draft. The latest implementation fix is committed on `feature/phase-1-kucoin-integration` at `d03e709ca3d9914ceebdbaea02cbb5ae71e4d1ce`; see the Agent 01 report for exact verification and limitations. |
 | Phase 2 | Blockchain and DEX integration | NOT STARTED | Depends on agreed chain/DEX scope and stable adapter contracts |
 | Phase 3 | Arbitrage engine | NOT STARTED | Requires market-data and quote contracts |
 | Phase 4 | Multi-strategy management | NOT STARTED | Requires strategy lifecycle/runtime design |
@@ -71,7 +71,7 @@ They are retained as historical records for now. This status file is the current
 - GitHub branches API reports `main` as protected.
 - PR #3 (`docs: establish authoritative project control and status`) remains open and Draft, with exactly two documentation files in its current reviewed diff. It has not been merged.
 - PR #5 (`feat: implement KuCoin read-only integration`) is open and Draft, targeting `alpha/repository-governance-baseline`; ALPHA requested corrections in [the PR review comment](https://github.com/elvito2808/Trading-Management-Platform/pull/5#issuecomment-7028142696).
-- Implementation commit `df0d4806b2bbeb76de96628c37b6d9f5992dee14` is on the same branch and PR. It replaces pair-specific fee retrieval with the central 0.1% fixed estimate and adds WebSocket-first Best Bid/Ask with Level 1 REST fallback.
+- Implementation commit `d03e709ca3d9914ceebdbaea02cbb5ae71e4d1ce` is on the same branch and PR. It replaces pair-specific fee retrieval with the central 0.1% fixed estimate, adds WebSocket-first Best Bid/Ask with Level 1 REST fallback, and deduplicates concurrent fallback requests.
 - No merge is authorized by this status record.
 
 ## 7. Earlier execution environment blocker — 2026-11-20 (superseded)
@@ -94,10 +94,10 @@ This was an environment/access blocker, not an application-code failure. Agent 0
 ## 8. Latest Phase 1 continuation
 
 - Branch: `feature/phase-1-kucoin-integration`; PR #5 remains open, Draft, and unmerged.
-- Implementation commit: `df0d4806b2bbeb76de96628c37b6d9f5992dee14`.
+- Implementation commit: `d03e709ca3d9914ceebdbaea02cbb5ae71e4d1ce`.
 - The adapter now uses only Level 1 Best Bid/Ask for REST market data; a single Classic Spot/Margin public WebSocket connection serves configured symbols and reconnects with bounded backoff.
 - The project-wide fee estimate is a fixed `Decimal("0.001")`; pair-specific and basic fee endpoints are not called. Trade quantities are supplied explicitly per symbol and are never rounded or derived from balances.
-- Python: 3.10.11. With `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1`, focused KuCoin tests: 52 passed; complete suite: 95 passed. Plain pytest plugin auto-loading is blocked by a pre-existing global `web3`/`eth_typing` plugin import error; exact commands are in the handoff report.
+- Python: 3.10.11. With `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1`, focused KuCoin tests: 53 passed; complete suite: 96 passed. Plain pytest plugin auto-loading is blocked by a pre-existing global `web3`/`eth_typing` plugin import error; exact commands are in the handoff report.
 - No live WebSocket, private-account, order, transfer, withdrawal, deposit, cancel, or amend operation was exercised or added.
 
 ## 9. Immediate next actions

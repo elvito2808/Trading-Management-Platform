@@ -340,7 +340,7 @@ Result: `98 passed in 1.56s`.
 **Status:** `PENDING_ALPHA_REVIEW`
 **Branch:** `feature/phase-1-kucoin-integration`
 **PR:** [#5](https://github.com/elvito2808/Trading-Management-Platform/pull/5)
-**Implementation commit:** `df0d4806b2bbeb76de96628c37b6d9f5992dee14`
+**Implementation commit:** `d03e709ca3d9914ceebdbaea02cbb5ae71e4d1ce`
 **Base before this continuation:** `4b9c3d7ae8d2037229459c273daf9499ba3fefd0`
 **Python:** `3.10.11`
 
@@ -349,6 +349,7 @@ Result: `98 passed in 1.56s`.
 - Removed pair-specific `/api/v1/trade-fees` retrieval and fee fallback classes. Dry-run estimates now use the centrally defined `Decimal("0.001")` assumption for every symbol, side, and order type. The fixed assumption is not presented as an actual KuCoin rate; market orders are always labeled taker.
 - Replaced all-ticker and Level 2 order-book market data with Level 1 Best Bid/Ask only: `GET /api/v1/market/orderbook/level1?symbol=...`.
 - Added a single Classic Spot/Margin public WebSocket connection for configured symbols using `POST /api/v1/bullet-public`, the official `/market/ticker:{symbol}` subscription/ack protocol, and server-provided heartbeat intervals. Reconnect backoff is capped, shutdown is explicit, and duplicate `start()` calls do not create extra connections.
+- Coalesced concurrent requests for the same fresh REST fallback quote to avoid unnecessary duplicate requests.
 - Added source, optional exchange event time, local receipt time, freshness, and connection status. Stale WebSocket data falls back to REST; a failed fallback can return only an explicitly `STALE` quote.
 - Added explicit `FixedTradeSize` inputs. No trade quantities were invented, rounded, or derived from balances. Dry-run preparation requires a supplied quote or explicit price and makes no fee or Best Bid/Ask request on its own; it does retrieve public symbol metadata for validation.
 - Tightened Best Bid/Ask, account balance consistency, symbol metadata, finite Decimal, increment, quantity bounds, `minFunds`, trading status, and quote provenance validation.
@@ -367,11 +368,11 @@ Successful commands were run from PowerShell with plugin autoload disabled:
 
 `$env:PYTEST_DISABLE_PLUGIN_AUTOLOAD = '1'; python -m pytest -q tests/test_kucoin.py`
 
-Result: **52 passed in 0.29s**.
+Result: **53 passed in 0.30s**.
 
 `$env:PYTEST_DISABLE_PLUGIN_AUTOLOAD = '1'; python -m pytest -q`
 
-Result: **95 passed in 1.09s**.
+Result: **96 passed in 1.20s**.
 
 These are the actual Python 3.10.11 results; no live KuCoin endpoint or real API key was used.
 
@@ -382,5 +383,5 @@ These are the actual Python 3.10.11 results; no live KuCoin endpoint or real API
 - The application has no default per-symbol quantities; callers must supply explicit `FixedTradeSize` values.
 - `quoteMinSize` is retained as metadata but is not assigned quote-value semantics; documented `minFunds` is the enforced notional minimum.
 - The Classic Spot/Margin public feed is used; UTA Pro WebSocket uses a different connection and subscription protocol and is not mixed into this adapter.
-- Commit `df0d4806b2bbeb76de96628c37b6d9f5992dee14` was pushed normally to the existing branch and PR #5. No second PR was created, no history was rewritten, and PR #5 was not merged.
+- Implementation commits `df0d4806b2bbeb76de96628c37b6d9f5992dee14` and `d03e709ca3d9914ceebdbaea02cbb5ae71e4d1ce` were pushed normally to the existing branch and PR #5. No second PR was created, no history was rewritten, and PR #5 was not merged.
 - Final status remains `PENDING_ALPHA_REVIEW`; ALPHA independently decides acceptance.

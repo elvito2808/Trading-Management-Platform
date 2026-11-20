@@ -24,7 +24,7 @@ Update status values only with evidence: `NOT STARTED`, `IN PROGRESS`, `BLOCKED`
 |---|---|---|---|---|---|
 | Baseline & docs gaps | Agent 0 + Agent 6 | NOT STARTED | Existing main state | — | Re-audit docs and CI; establish acceptance checklist |
 | Core/Data maintenance | Agent 1 | ACCEPTED (Phase 2 documented) | Baseline | Phase 2 evidence in PROGRESS.md; revalidate | Avoid duplicate rebuild; handle concrete gaps only |
-| Exchange/Market Data & Wallet | Agent 2 | IN REVIEW | Core interfaces; security design | [PR #5](https://github.com/elvito2808/Trading-Management-Platform/pull/5), latest implementation commit `df0d4806b2bbeb76de96628c37b6d9f5992dee14` | ALPHA independently reviews; keep PENDING_ALPHA_REVIEW until acceptance |
+| Exchange/Market Data & Wallet | Agent 2 | IN REVIEW | Core interfaces; security design | [PR #5](https://github.com/elvito2808/Trading-Management-Platform/pull/5), latest implementation commit `d03e709ca3d9914ceebdbaea02cbb5ae71e4d1ce` | ALPHA independently reviews; keep PENDING_ALPHA_REVIEW until acceptance |
 | Strategy & Risk | Agent 3 | NOT STARTED | Core/Data; market data contracts | — | Start definitions/signals and deterministic risk contracts |
 | Execution/Portfolio/Simulation | Agent 4 | NOT STARTED | Strategy/Risk contracts | — | Paper-only simulation before execution adapters |
 | API & UI | Agent 5 | NOT STARTED | Stable application services and DTOs | — | API contract proposal before implementation |
@@ -48,8 +48,8 @@ Append a newest-first entry for each merged/accepted PR:
 - Agent: AGENT-01-KUCOIN
 - Objective: Maintain read-only KuCoin account data and WebSocket-first Best Bid/Ask market data with local fixed-fee dry-run preparation.
 - Files/contracts reserved: `trading_platform/exchanges/`, `tests/test_kucoin.py`, KuCoin integration docs
-- Last verified implementation commit: `df0d4806b2bbeb76de96628c37b6d9f5992dee14`
-- Checks run and results: Python 3.10.11; focused KuCoin `52 passed`; full suite `95 passed`. Both passed with pytest plugin auto-loading disabled due the global `web3.tools.pytest_ethereum`/`eth_typing.ContractName` import failure; exact commands and failed initial attempt are recorded in the Agent 01 report.
+- Last verified implementation commit: `d03e709ca3d9914ceebdbaea02cbb5ae71e4d1ce`
+- Checks run and results: Python 3.10.11; focused KuCoin `53 passed`; full suite `96 passed`. Both passed with pytest plugin auto-loading disabled due the global `web3.tools.pytest_ethereum`/`eth_typing.ContractName` import failure; exact commands and failed initial attempt are recorded in the Agent 01 report.
 - Blockers/limitations: no live public WebSocket or private-account connectivity was tested; fixed 0.1% is an estimate, not KuCoin fee data; no per-symbol trade quantities were supplied.
 - Next concrete action: ALPHA independently reviews updated PR #5; do not merge without separate authorization
 - Ledger updated in PR: yes
