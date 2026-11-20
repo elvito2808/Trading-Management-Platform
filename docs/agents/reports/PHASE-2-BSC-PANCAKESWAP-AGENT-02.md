@@ -103,4 +103,4 @@ The mock/unit cases verified all required states: `ESTIMATED_NODE` is sourced on
 
 ### Delivery
 
-Confirmed source change: one bounded regression test assertion update in `tests/test_dex_pancakeswap.py`; no runtime implementation correction was required. The report and test change are pending commit. Keep PR #6 Open, Draft, and Unmerged.
+Confirmed source change: one bounded regression test assertion update in `tests/test_dex_pancakeswap.py`; no runtime implementation correction was required. The initial validation commit is `33415a9`; the report-SHA finalization commit is recorded by the delivery agent. Keep PR #6 Open, Draft, and Unmerged.
