@@ -1,3 +1,6 @@
+
+> **Authoritative successor handoff update — 2026-11-20:** The historical status snapshot below contains stale branch and phase fields. Use [docs/ALPHA_SUCCESSOR_HANDOFF.md](ALPHA_SUCCESSOR_HANDOFF.md) as the reconciled project handoff. Current accepted states: Phase 0 **ACCEPTED**; Phase 1 **ACCEPTED WITH DEFERRED VALIDATION ITEMS**; Phase 2 **PARTIALLY COMPLETED**; Phases 3–7 **NOT STARTED**. PR #5 and PR #6 are Open/Draft/Unmerged. Phase 1 HEAD: `316829506217cb817c69f04af5eaa9614a29feff`; Phase 2 HEAD: `f22cbe6672604b63d6b603a8b5831eda1c0d5a89`. Phase 2 live quote and full Dry-Run acceptance gates remain open. Do not use older PENDING_ALPHA_REVIEW statements below as current acceptance state.
+
 # Project Status — Trading Management Platform
 
 **Repository:** https://github.com/elvito2808/Trading-Management-Platform  
