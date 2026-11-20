@@ -51,7 +51,7 @@ Append a newest-first entry for each merged/accepted PR:
 - Last verified correction commit: `a85f233975eafba627f01eb679354122f7a14ca0`
 - Checks run and results: initial baseline `43 passed`; initial focused/full `26`/`69` passed; corrected Python 3.10 focused/full suites `55`/`98` passed
 - Blockers: live private-account and private-fee connectivity unverified without a real read-only key
-- Next concrete action: push correction commit to PR #5 and have ALPHA perform independent acceptance review
+- Next concrete action: ALPHA independently reviews updated PR #5; do not merge without separate authorization
 - Ledger updated in PR: yes
 
 ## Shared interface decisions
