@@ -50,8 +50,9 @@ DOCS_VERIFIED = read from official docs on 2026-11-20; **not** checked on-chain.
   The first eth_chainId probe returned chain 56; tests 1–5 passed (including token reads, V2 deployment/pair,
   V3 deployment and enabled fee-tier checks). During test 6 a TLS handshake timeout exhausted retries; test 7 then
   failed because the full dry-run returned no directions after an RPC timeout. Thus no successful live quote or
-  complete dry-run was verified. An unauthenticated `https://1rpc.io/bnb` chain-ID probe also returned chain 56,
-  but the live suite was not rerun against it; `https://bsc-rpc.publicnode.com` timed out.
+  complete dry-run was verified. An unauthenticated `https://1rpc.io/bnb` chain-ID probe returned chain 56,
+  but the live suite against it timed out during `setUpClass` while fetching the latest block, before any tests ran.
+  The `https://bsc-rpc.publicnode.com` chain-ID probe also timed out.
 
 ## 5. Limitations / things to confirm in the first live run
 1. Function selectors were verified against independent well-known values (Uniswap-derived). Pancake V3 `QuoterV2`/`slot0()` layout

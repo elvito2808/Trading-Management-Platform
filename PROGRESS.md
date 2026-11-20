@@ -126,5 +126,6 @@ The required branch was rechecked before updating: `feature/arbitrage-live-integ
 * Focused suite (Python 3.10.11): 48 passed, 7 skipped (the skipped tests are the opt-in live tests). Full suite:
   `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest -q` — 146 passed, 7 skipped.
 * Live suite: 5 passed, 1 error and 1 failure on free `https://bsc-dataseed.binance.org` after RPC TLS timeouts.
-  Chain ID 56 was confirmed, but full live quote/dry-run validation did not pass. See the report for the exact command and endpoint probes.
+  A second endpoint, `https://1rpc.io/bnb`, passed a chain-ID probe but timed out during suite setup before tests ran.
+  Chain ID 56 was confirmed, but full live quote/dry-run validation did not pass. See the report for exact details.
 * Full report: `docs/agents/reports/PHASE-2-BSC-PANCAKESWAP-AGENT-02.md`. Usage: `docs/BSC_PANCAKESWAP_INTEGRATION.md`.

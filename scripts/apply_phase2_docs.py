@@ -22,6 +22,8 @@ SECTION = f"""
   `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest -q` — 146 passed, 7 skipped.
 * Live read-only suite against `https://bsc-dataseed.binance.org`: 5 passed, 1 error and 1 failure after RPC
   TLS timeouts during quote/dry-run checks. Chain ID 56 was confirmed; full live quote validation did not pass.
+  A second endpoint, `https://1rpc.io/bnb`, passed an initial chain-ID probe but timed out during live-suite setup
+  before any tests ran; `https://bsc-rpc.publicnode.com` also timed out.
   The plain `python -m pytest -q` command is blocked by a global `web3.tools.pytest_ethereum` plugin import error
   (`eth_typing.ContractName`).
 * Full report: `docs/agents/reports/PHASE-2-BSC-PANCAKESWAP-AGENT-02.md`. Usage: `docs/BSC_PANCAKESWAP_INTEGRATION.md`.
