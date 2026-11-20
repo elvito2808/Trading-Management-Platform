@@ -3,7 +3,7 @@
 **Repository:** https://github.com/elvito2808/Trading-Management-Platform
 **Default branch:** `main`
 **Current implementation branch:** `feature/phase-1-kucoin-integration`
-**Current submitted HEAD:** `cd07970b32396fed478fcdc6d85fa641e4033d26`
+**Current submitted HEAD:** `316829506217cb817c69f04af5eaa9614a29feff`
 **Previous submitted implementation HEAD (historical):** `b098b231c9ab3f6d35201a5a91828c3d5632d3ca`
 **Current phase:** Phase 1 — KuCoin Integration
 **Current status:** `PENDING_ALPHA_REVIEW`
@@ -100,7 +100,7 @@ Detailed blocker, inspected architecture, exact clone error, and next-agent requ
 
 ### Agent 01 continuation — fixed fee and WebSocket-first Best Bid/Ask (2026-11-20)
 
-**Status: PENDING_ALPHA_REVIEW.** The current submitted HEAD is `cd07970b32396fed478fcdc6d85fa641e4033d26`; the previous submitted implementation HEAD `b098b231c9ab3f6d35201a5a91828c3d5632d3ca` is historical. Work is on `feature/phase-1-kucoin-integration` and [PR #5](https://github.com/elvito2808/Trading-Management-Platform/pull/5), which remains Open, Draft, and Unmerged; ALPHA acceptance has not occurred.
+**Status: PENDING_ALPHA_REVIEW.** The current submitted HEAD is `316829506217cb817c69f04af5eaa9614a29feff`; the previous submitted implementation HEAD `b098b231c9ab3f6d35201a5a91828c3d5632d3ca` is historical. Work is on `feature/phase-1-kucoin-integration` and [PR #5](https://github.com/elvito2808/Trading-Management-Platform/pull/5), which remains Open, Draft, and Unmerged; ALPHA acceptance has not occurred.
 
 - Fee estimation now uses the central fixed `Decimal("0.001")` assumption; there is no pair-fee or basic-fee request.
 - KuCoin market data uses one public Classic Spot/Margin WebSocket connection for configured symbols, with Level 1 Best Bid/Ask REST fallback only. No full order book is retrieved or retained.
@@ -116,3 +116,15 @@ The original Phase 1 blocker records above are historical and remain preserved. 
 **Status remains BLOCKED — no implementation or tests.** The only local execution runtime inspected provides Python 3.13.5 and Git 2.47.3, but has no outbound DNS/network: `github.com`, `api.github.com`, and `www.kucoin.com` fail name resolution; Python HTTPS probes return `[Errno -3] Temporary failure in name resolution`. No separate terminal/workspace/Codespaces runtime was available, and no paid environment was provisioned.
 
 The required branch was rechecked before updating: `feature/arbitrage-live-integration` at `92c4fe17f423814de1da3369cfb5e1257a2115e0`, ahead of `main` by 2 commits and behind by 0; merge base remains `2ea9f39f5cd1bc97253a2eabadf1753fbc1b6ea6`. Both earlier commits were preserved. No application files were modified and no tests were run. Detailed environment checks and exact errors are recorded in the [continuation report](docs/agents/reports/PHASE-1-KUCOIN-AGENT-01.md).
+
+<!-- PHASE-2-BSC-PANCAKESWAP-INTEGRATION -->
+## Phase 2 - BNB Smart Chain + PancakeSwap V2/V3 (Agent 02) - PARTIALLY COMPLETED
+
+* Task ID: PHASE-2-BSC-PANCAKESWAP-INTEGRATION. Mode: READ-ONLY / DRY-RUN. Branch: `feature/phase-2-bsc-pancakeswap-integration`
+  (based on `feature/phase-1-kucoin-integration`, PR #5 head). PR #5 is NOT merged. Commit: 258e5a69b676d99f7069eda4c3ceb2fbc5112794. PR: https://github.com/elvito2808/Trading-Management-Platform/pull/6.
+* Implemented: `trading_platform/dex/` (BSC adapter, V2, V3, gas, registry, dry-run). KuCoin code untouched.
+* Focused suite (Python 3.10.11): 48 passed, 7 skipped (the skipped tests are the opt-in live tests). Full suite:
+  `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest -q` — 146 passed, 7 skipped.
+* Live suite: 5 passed, 1 error and 1 failure on free `https://bsc-dataseed.binance.org` after RPC TLS timeouts.
+  Chain ID 56 was confirmed, but full live quote/dry-run validation did not pass. See the report for the exact command and endpoint probes.
+* Full report: `docs/agents/reports/PHASE-2-BSC-PANCAKESWAP-AGENT-02.md`. Usage: `docs/BSC_PANCAKESWAP_INTEGRATION.md`.

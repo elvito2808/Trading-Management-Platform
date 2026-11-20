@@ -18,9 +18,12 @@ SECTION = f"""
 * Task ID: PHASE-2-BSC-PANCAKESWAP-INTEGRATION. Mode: READ-ONLY / DRY-RUN. Branch: `feature/phase-2-bsc-pancakeswap-integration`
   (based on `feature/phase-1-kucoin-integration`, PR #5 head). PR #5 is NOT merged. Commit: {SHA}. PR: {PR}.
 * Implemented: `trading_platform/dex/` (BSC adapter, V2, V3, gas, registry, dry-run). KuCoin code untouched.
-* Verified: 48 mock/unit tests pass locally (Python 3.12, no network).
-* NOT verified: any live BSC RPC / PancakeSwap contract call (sandbox had no network). Live tests exist and are opt-in:
-  `RUN_LIVE_BSC_TESTS=1 BSC_RPC_URL=... python -m unittest tests/test_dex_live_rpc.py`.
+* Focused suite (Python 3.10.11): 48 passed, 7 skipped (live tests are opt-in). Full suite:
+  `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest -q` — 146 passed, 7 skipped.
+* Live read-only suite against `https://bsc-dataseed.binance.org`: 5 passed, 1 error and 1 failure after RPC
+  TLS timeouts during quote/dry-run checks. Chain ID 56 was confirmed; full live quote validation did not pass.
+  The plain `python -m pytest -q` command is blocked by a global `web3.tools.pytest_ethereum` plugin import error
+  (`eth_typing.ContractName`).
 * Full report: `docs/agents/reports/PHASE-2-BSC-PANCAKESWAP-AGENT-02.md`. Usage: `docs/BSC_PANCAKESWAP_INTEGRATION.md`.
 """
 

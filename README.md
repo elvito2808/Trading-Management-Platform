@@ -39,6 +39,6 @@ Identifiers are generated as UUIDs unless explicitly supplied. Use returned IDs 
 
 ## Scope exclusions
 
-No live exchange/DEX connectivity, wallet signing, live RPC, blockchain transaction submission, live market data, strategies, bot execution, order execution, or real-money trading is implemented in Phase 2. These remain future work.
+No exchange order execution, wallet signing, blockchain transaction submission, automated strategies, bot execution, or real-money trading is implemented. A separate read-only BSC/PancakeSwap RPC quote and dry-run integration is documented in [BSC_PANCAKESWAP_INTEGRATION.md](docs/BSC_PANCAKESWAP_INTEGRATION.md); it does not sign, submit, or execute transactions.
 
 See `docs/` for architecture, schema, CLI, readiness, decisions, and roadmap. `PROGRESS.md` records the verified repository state.

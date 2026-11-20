@@ -3,7 +3,7 @@
 **Repository:** https://github.com/elvito2808/Trading-Management-Platform  
 **Status snapshot date:** 2026-11-20  
 **Current implementation branch:** `feature/phase-1-kucoin-integration`
-**Current submitted HEAD:** `cd07970b32396fed478fcdc6d85fa641e4033d26`
+**Current submitted HEAD:** `316829506217cb817c69f04af5eaa9614a29feff`
 **Previous submitted implementation HEAD (historical):** `b098b231c9ab3f6d35201a5a91828c3d5632d3ca`
 **Current phase status:** `PENDING_ALPHA_REVIEW`
 **PR #5:** Open, Draft, Unmerged. `main` was not modified.
@@ -27,7 +27,7 @@
 |---|---|---|---|
 | Phase 0 | Repository audit and architecture | ACCEPTED | ALPHA's read-only audit; no code changes were part of that phase |
 | Phase 1 | KuCoin integration | PENDING_ALPHA_REVIEW | PR #5 is open and Draft. The latest corrections are committed on `feature/phase-1-kucoin-integration`; see the Agent 01 report for exact verification and limitations. |
-| Phase 2 | Blockchain and DEX integration | NOT STARTED | Depends on agreed chain/DEX scope and stable adapter contracts |
+| Phase 2 | Blockchain and DEX integration | PENDING_ALPHA_REVIEW | [Draft PR #6](https://github.com/elvito2808/Trading-Management-Platform/pull/6) adds the BSC/PancakeSwap read-only integration; full unit suite passed, live quote validation was intermittent. |
 | Phase 3 | Arbitrage engine | NOT STARTED | Requires market-data and quote contracts |
 | Phase 4 | Multi-strategy management | NOT STARTED | Requires strategy lifecycle/runtime design |
 | Phase 5 | Risk management and recovery | NOT STARTED | Must precede any execution readiness |
@@ -99,7 +99,7 @@ This was an environment/access blocker, not an application-code failure. Agent 0
 
 ## 8. Latest Phase 1 continuation
 
-- Branch: `feature/phase-1-kucoin-integration`; current submitted HEAD: `cd07970b32396fed478fcdc6d85fa641e4033d26`; PR #5 remains Open, Draft, and Unmerged.
+- Branch: `feature/phase-1-kucoin-integration`; current submitted HEAD: `316829506217cb817c69f04af5eaa9614a29feff`; PR #5 remains Open, Draft, and Unmerged.
 - Previous submitted implementation HEAD: `b098b231c9ab3f6d35201a5a91828c3d5632d3ca` (historical). Earlier implementation commit `d03e709ca3d9914ceebdbaea02cbb5ae71e4d1ce` is also historical.
 - The adapter now uses only Level 1 Best Bid/Ask for REST market data; a single Classic Spot/Margin public WebSocket connection serves configured symbols and reconnects with bounded backoff.
 - The project-wide fee estimate is a fixed `Decimal("0.001")`; pair-specific and basic fee endpoints are not called. Trade quantities are supplied explicitly per symbol and are never rounded or derived from balances.
@@ -121,3 +121,15 @@ This was an environment/access blocker, not an application-code failure. Agent 0
 - No paid infrastructure without explicit approval.
 - No secrets in the repository.
 - No live orders, swaps, wallet signing, withdrawals, or transfers.
+
+<!-- PHASE-2-BSC-PANCAKESWAP-INTEGRATION -->
+## Phase 2 - BNB Smart Chain + PancakeSwap V2/V3 (Agent 02) - PARTIALLY COMPLETED
+
+* Task ID: PHASE-2-BSC-PANCAKESWAP-INTEGRATION. Mode: READ-ONLY / DRY-RUN. Branch: `feature/phase-2-bsc-pancakeswap-integration`
+  (based on `feature/phase-1-kucoin-integration`, PR #5 head). PR #5 is NOT merged. Commit: 258e5a69b676d99f7069eda4c3ceb2fbc5112794. PR: https://github.com/elvito2808/Trading-Management-Platform/pull/6.
+* Implemented: `trading_platform/dex/` (BSC adapter, V2, V3, gas, registry, dry-run). KuCoin code untouched.
+* Focused suite (Python 3.10.11): 48 passed, 7 skipped (the skipped tests are the opt-in live tests). Full suite:
+  `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest -q` — 146 passed, 7 skipped.
+* Live suite: 5 passed, 1 error and 1 failure on free `https://bsc-dataseed.binance.org` after RPC TLS timeouts.
+  Chain ID 56 was confirmed, but full live quote/dry-run validation did not pass. See the report for exact details.
+* Full report: `docs/agents/reports/PHASE-2-BSC-PANCAKESWAP-AGENT-02.md`. Usage: `docs/BSC_PANCAKESWAP_INTEGRATION.md`.
