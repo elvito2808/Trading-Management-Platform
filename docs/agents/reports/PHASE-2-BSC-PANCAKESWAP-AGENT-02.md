@@ -1,6 +1,6 @@
 # AGENT 02 REPORT - PHASE-2-BSC-PANCAKESWAP-INTEGRATION
 
-**Final status: `PARTIALLY COMPLETED - LIVE VALIDATION BLOCKED** (read-only implementation delivered; complete live quote/dry-run evidence remains unavailable)
+**Final status:** `PARTIALLY COMPLETED - LIVE VALIDATION BLOCKED` (read-only implementation delivered; complete live quote/dry-run evidence remains unavailable)
 Date: 2026-11-20 | Mode: READ-ONLY / DRY-RUN | Network: BSC Mainnet (chain 56)
 
 ## 1. Summary
@@ -119,4 +119,4 @@ No new endpoint provided a complete, stable quote run. V2 exact-input/exact-outp
 
 The closeout audit identified and corrected one bounded gas-semantics defect: `PARTIAL_POOL_ONLY` previously produced a net figure and status `READY` with only an understatement qualifier. It now retains the explicit pool-level gas estimate but withholds `net_output` and reports `READY_GAS_PARTIAL`; only a complete node estimate can report `READY`. `UNKNOWN` behavior remains unchanged and withholds both cost and net output. Focused and full suites remained **55 passed, 7 skipped** and **146 passed, 7 skipped**, respectively, after the correction. The correction is covered by `tests/test_dex_gas_dry_run.py`.
 
-Closeout implementation and test correction are committed as `58932bd` from starting HEAD `f22cbe6672604b63d6b603a8b5831eda1c0d5a89`; this report finalization follows on the same branch. Keep PR #6 Open, Draft, and Unmerged.
+Closeout implementation and test correction are committed as `58932bd5c3b49352ed4646f36df88978c36ce908` from starting HEAD `f22cbe6672604b63d6b603a8b5831eda1c0d5a89`; current closeout HEAD is `84fb93aa95ceb2f63325bcededcdb5705935ea95`. Keep PR #6 Open, Draft, and Unmerged.

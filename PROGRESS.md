@@ -2,16 +2,21 @@
 
 **Repository:** https://github.com/elvito2808/Trading-Management-Platform
 **Default branch:** `main`
-**Current implementation branch:** `feature/phase-1-kucoin-integration`
-**Current submitted HEAD:** `316829506217cb817c69f04af5eaa9614a29feff`
+**Current implementation branch:** `feature/phase-2-bsc-pancakeswap-integration`
+**Current submitted HEAD:** `84fb93aa95ceb2f63325bcededcdb5705935ea95`
 **Previous submitted implementation HEAD (historical):** `b098b231c9ab3f6d35201a5a91828c3d5632d3ca`
-**Current phase:** Phase 1 — KuCoin Integration
-**Current status:** `PENDING_ALPHA_REVIEW`
-**PR #5:** Open, Draft, Unmerged. `main` was not modified.
+**Current phase:** Phase 2 — BNB Smart Chain + PancakeSwap V2/V3
+**Current status:** `PARTIALLY COMPLETED`
+**PR #5:** Open, Draft, Unmerged at `316829506217cb817c69f04af5eaa9614a29feff`. `main` was not modified.
+**PR #6:** Open, Draft, Unmerged at `84fb93aa95ceb2f63325bcededcdb5705935ea95`. `main` was not modified.
 
-**Current test evidence:** Agent-reported on Python 3.10.11; ALPHA has not independently rerun the tests. Focused KuCoin tests: **55 passed**; full suite: **98 passed**, using the plugin-disabled commands documented in the Agent 01 report. The latest reviewed commit had no reported combined status checks; no CI pass is claimed here.
+**Current test evidence:** Agent-reported Phase 2 results; ALPHA has not independently rerun tests in this documentation-only reconciliation. Focused suite: **55 passed/7 skipped**; full suite: **146 passed/7 skipped**. No CI checks were reported; no CI pass is claimed here. Live quote/dry-run validation remains blocked by free public RPC failures.
 
-## Historical project snapshot — Phase 2 metadata and persistence
+**Canonical phase statuses:** Phase 0 `ACCEPTED`; Phase 1 `ACCEPTED WITH DEFERRED VALIDATION ITEMS`; Phase 2 `PARTIALLY COMPLETED`; Phases 3–7 `NOT STARTED`.
+
+The records below that describe the former metadata-persistence Phase 2 or earlier Phase 1 states are **superseded historical records**. They remain preserved for audit history and do not override this current summary.
+
+## Superseded historical project snapshot — Phase 2 metadata and persistence
 
 The following Phase 2 material is retained as project history and is not the current implementation branch or phase. The former `phase2/metadata-persistence` branch and its merged status belong to an earlier repository snapshot.
 
@@ -90,7 +95,7 @@ No critical Phase 2 requirement remains identified by the automated test suite. 
 Proceed only after a separate instruction: Strategy definitions and Bot Instance metadata/lifecycle management, keeping strategy logic independent of Bot lifecycle and Execution. Do not begin Phase 3 in this task.
 
 
-## Historical Phase 1 blocker record — KuCoin (AGENT-01-KUCOIN)
+## Superseded historical Phase 1 blocker record — KuCoin (AGENT-01-KUCOIN)
 
 **Status: BLOCKED — not implemented.** The isolated branch `feature/arbitrage-live-integration` was created from main commit `2ea9f39f5cd1bc97253a2eabadf1753fbc1b6ea6`. Repository inspection confirmed the Python modular-monolith package root is `trading_platform/`, with domain metadata, application services, a repository Protocol/SQLite adapter, TOML configuration, and central CLI readiness/command registry. No exchange connector exists yet.
 
@@ -98,7 +103,7 @@ Implementation and tests could not safely proceed because the execution environm
 
 Detailed blocker, inspected architecture, exact clone error, and next-agent requirements: [AGENT-01 report](docs/agents/reports/PHASE-1-KUCOIN-AGENT-01.md).
 
-### Agent 01 continuation — fixed fee and WebSocket-first Best Bid/Ask (2026-11-20)
+### Superseded historical Agent 01 continuation — fixed fee and WebSocket-first Best Bid/Ask (2026-11-20)
 
 **Status: PENDING_ALPHA_REVIEW.** The current submitted HEAD is `316829506217cb817c69f04af5eaa9614a29feff`; the previous submitted implementation HEAD `b098b231c9ab3f6d35201a5a91828c3d5632d3ca` is historical. Work is on `feature/phase-1-kucoin-integration` and [PR #5](https://github.com/elvito2808/Trading-Management-Platform/pull/5), which remains Open, Draft, and Unmerged; ALPHA acceptance has not occurred.
 
@@ -111,7 +116,7 @@ Detailed blocker, inspected architecture, exact clone error, and next-agent requ
 The original Phase 1 blocker records above are historical and remain preserved. See the [current project status](docs/PROJECT_STATUS.md), [implementation ledger](docs/agents/IMPLEMENTATION_STATE.md), and [continuation report](docs/agents/reports/PHASE-1-KUCOIN-AGENT-01.md) for reconciled evidence.
 
 
-### AGENT-01 continuation — environment recovery (2026-11-19)
+### Superseded historical AGENT-01 continuation — environment recovery (2026-11-19)
 
 **Status remains BLOCKED — no implementation or tests.** The only local execution runtime inspected provides Python 3.13.5 and Git 2.47.3, but has no outbound DNS/network: `github.com`, `api.github.com`, and `www.kucoin.com` fail name resolution; Python HTTPS probes return `[Errno -3] Temporary failure in name resolution`. No separate terminal/workspace/Codespaces runtime was available, and no paid environment was provisioned.
 

@@ -3,9 +3,11 @@
 **Repository:** https://github.com/elvito2808/Trading-Management-Platform
 **Default branch:** `main`
 **Ledger owner:** Agent 0 (Orchestrator); every implementing agent must update it in its own PR.
-**Current submitted HEAD:** `316829506217cb817c69f04af5eaa9614a29feff` on `feature/phase-1-kucoin-integration`.
+**Current submitted HEAD:** `84fb93aa95ceb2f63325bcededcdb5705935ea95` on `feature/phase-2-bsc-pancakeswap-integration`.
 **Previous submitted implementation HEAD (historical):** `b098b231c9ab3f6d35201a5a91828c3d5632d3ca`.
-**Phase 1 status:** `PENDING_ALPHA_REVIEW`; PR #5 is Open, Draft, and Unmerged. `main` was not modified.
+**Phase 1 status:** `ACCEPTED WITH DEFERRED VALIDATION ITEMS`; PR #5 is Open, Draft, and Unmerged at submitted head `316829506217cb817c69f04af5eaa9614a29feff`. `main` was not modified.
+**Phase 2 status:** `PARTIALLY COMPLETED`; PR #6 is Open, Draft, and Unmerged at submitted head `84fb93aa95ceb2f63325bcededcdb5705935ea95`.
+**Current evidence:** Agent-reported Phase 2 focused suite 55 passed/7 skipped and full suite 146 passed/7 skipped; no CI checks were reported. This ledger update is documentation-only and is not independent test verification.
 **Last reviewed:** 2026-11-20 (submitted branch state; ALPHA acceptance has not occurred).
 
 ## Ground rules
@@ -21,14 +23,14 @@ This ledger is a handoff source, not a substitute for checking GitHub. On each s
 - [ ] Exchange/Market Data, Wallet infrastructure, Execution, Portfolio, API/UI, full QA/Security and deployment are not implemented as baseline scope according to README and PROGRESS.
 
 ## Workstream tracker
-Update status values only with evidence: `NOT STARTED`, `IN PROGRESS`, `BLOCKED`, `IN REVIEW`, `ACCEPTED`.
+Update status values only with evidence: `NOT STARTED`, `IN PROGRESS`, `BLOCKED`, `IN REVIEW`, `ACCEPTED`, `ACCEPTED WITH DEFERRED VALIDATION ITEMS`, `PARTIALLY COMPLETED`.
 
 | Workstream | Responsible prompt | Status | Depends on | Evidence / PR | Remaining / next action |
 |---|---|---|---|---|---|
 | Baseline & docs gaps | Agent 0 + Agent 6 | NOT STARTED | Existing main state | — | Re-audit docs and CI; establish acceptance checklist |
 | Core/Data maintenance | Agent 1 | ACCEPTED (Phase 2 documented) | Baseline | Phase 2 evidence in PROGRESS.md; revalidate | Avoid duplicate rebuild; handle concrete gaps only |
-| Exchange/Market Data & Wallet | Agent 2 | IN REVIEW | Core interfaces; security design | [PR #5](https://github.com/elvito2808/Trading-Management-Platform/pull/5), current submitted HEAD `316829506217cb817c69f04af5eaa9614a29feff` | ALPHA independently reviews; keep PENDING_ALPHA_REVIEW until acceptance |
-| BSC / PancakeSwap read-only integration | Agent 02 | IN REVIEW | Phase 1 PR #5 head | [Draft PR #6](https://github.com/elvito2808/Trading-Management-Platform/pull/6), implementation commit `258e5a69b676d99f7069eda4c3ceb2fbc5112794` | ALPHA reviews; live quote validation remains incomplete due public RPC timeouts |
+| Exchange/Market Data & Wallet | Agent 2 | ACCEPTED WITH DEFERRED VALIDATION ITEMS | Core interfaces; security design | [PR #5](https://github.com/elvito2808/Trading-Management-Platform/pull/5), submitted head `316829506217cb817c69f04af5eaa9614a29feff` | Deferred validation items remain in the Agent 01 report; PR stays Open, Draft, and Unmerged |
+| BSC / PancakeSwap read-only integration | Agent 02 | PARTIALLY COMPLETED | Phase 1 PR #5 head | [Draft PR #6](https://github.com/elvito2808/Trading-Management-Platform/pull/6), current head `84fb93aa95ceb2f63325bcededcdb5705935ea95`, correction commit `58932bd5c3b49352ed4646f36df88978c36ce908` | Live quote/dry-run validation remains blocked by free public RPC failures; no CI checks reported |
 | Strategy & Risk | Agent 3 | NOT STARTED | Core/Data; market data contracts | — | Start definitions/signals and deterministic risk contracts |
 | Execution/Portfolio/Simulation | Agent 4 | NOT STARTED | Strategy/Risk contracts | — | Paper-only simulation before execution adapters |
 | API & UI | Agent 5 | NOT STARTED | Stable application services and DTOs | — | API contract proposal before implementation |
@@ -47,8 +49,8 @@ Append a newest-first entry for each merged/accepted PR:
 - Updated status and next work:
 - Known limitations / follow-up issue links:
 
-## In-progress work / handoff
-- Current active branch / PR: `feature/phase-1-kucoin-integration` at submitted HEAD `316829506217cb817c69f04af5eaa9614a29feff`; [PR #5](https://github.com/elvito2808/Trading-Management-Platform/pull/5) is Open, Draft, and Unmerged
+## Superseded Phase 1 in-progress work / handoff
+- Current active branch / PR: `feature/phase-2-bsc-pancakeswap-integration` at submitted HEAD `84fb93aa95ceb2f63325bcededcdb5705935ea95`; [PR #6](https://github.com/elvito2808/Trading-Management-Platform/pull/6) is Open, Draft, and Unmerged. The remaining Agent 01 bullets in this superseded section describe PR #5 historical handoff context.
 - Agent: AGENT-01-KUCOIN
 - Objective: Maintain read-only KuCoin account data and WebSocket-first Best Bid/Ask market data with local fixed-fee dry-run preparation.
 - Files/contracts reserved: `trading_platform/exchanges/`, `tests/test_kucoin.py`, KuCoin integration docs
