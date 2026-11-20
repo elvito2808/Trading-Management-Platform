@@ -11,8 +11,8 @@ class FixedFeePolicy:
     rate: Decimal = FIXED_TRADING_FEE_RATE
 
     def __post_init__(self) -> None:
-        if not isinstance(self.rate, Decimal) or not self.rate.is_finite() or self.rate < 0:
-            raise ValueError("fixed fee rate must be finite and non-negative")
+        if not isinstance(self.rate, Decimal) or self.rate != FIXED_TRADING_FEE_RATE:
+            raise ValueError("fee rate is fixed at Decimal('0.001')")
 
     def estimate(self, notional: Decimal) -> Decimal:
         if not isinstance(notional, Decimal) or not notional.is_finite() or notional < 0:

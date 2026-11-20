@@ -2,10 +2,13 @@
 
 **Agent:** AGENT-01-KUCOIN  
 **Repository:** `elvito2808/Trading-Management-Platform`  
-**Status:** BLOCKED — implementation and verification not completed  
+**Current status:** `PENDING_ALPHA_REVIEW`
+**Historical status at report creation (2026-11-19):** BLOCKED — implementation and verification not completed. This was an environment/access blocker and was later resolved; the historical account below is retained as history.
 **Date:** 2026-11-19
 
 ## Executive summary
+
+The initial blocked attempt described in this report is historical. The current implementation and its verification are documented in the dated continuation sections near the end of this report. Current status remains `PENDING_ALPHA_REVIEW`; ALPHA acceptance has not occurred.
 
 The repository was inspected through the GitHub integration. The authorized feature branch was created from the latest observed `main` head. Implementation was not started because the available execution environment could not clone the repository and has no working DNS/network access to GitHub. The GitHub file connector can inspect and mutate individual text files, but it cannot provide a local checkout, install dependencies, run pytest, or validate the complete package coherently. Making a production-oriented exchange adapter through isolated unexecuted file writes would not meet the assignment's safety and completion criteria.
 
@@ -385,3 +388,17 @@ These are the actual Python 3.10.11 results; no live KuCoin endpoint or real API
 - The Classic Spot/Margin public feed is used; UTA Pro WebSocket uses a different connection and subscription protocol and is not mixed into this adapter.
 - Implementation commits `df0d4806b2bbeb76de96628c37b6d9f5992dee14` and `d03e709ca3d9914ceebdbaea02cbb5ae71e4d1ce` were pushed normally to the existing branch and PR #5. No second PR was created, no history was rewritten, and PR #5 was not merged.
 - Final status remains `PENDING_ALPHA_REVIEW`; ALPHA independently decides acceptance.
+
+## Owner continuation — final review corrections (2026-11-20)
+
+**Status:** `PENDING_ALPHA_REVIEW` — no ALPHA acceptance is claimed.
+**Branch:** `feature/phase-1-kucoin-integration`; PR #5 remains open and Draft.
+**Python:** `3.10.11`
+
+- WebSocket ticker parsing now reads `Time`; REST Level 1 reads `time`. Timestamp tests cover seconds, milliseconds, nanoseconds, UTC normalization, and source-specific field selection. Invalid or absent exchange time remains `None`; local receipt time is not used as a substitute.
+- `FixedFeePolicy` rejects every rate except `Decimal("0.001")`; the client uses the central policy. Buy and sell dry-run estimates share that Decimal rate and retain the `fixed-assumption` label.
+- Focused command: `$env:PYTEST_DISABLE_PLUGIN_AUTOLOAD = '1'; python -m pytest -q tests/test_kucoin.py` — **55 passed**.
+- Full command: `$env:PYTEST_DISABLE_PLUGIN_AUTOLOAD = '1'; python -m pytest -q` — **98 passed**.
+- Plain pytest remains affected by global plugin autoload failing to import `web3.tools.pytest_ethereum` because `eth_typing.ContractName` is unavailable. Successful validation used the commands above on Python 3.10.11.
+- Existing test coverage also checks WebSocket-first selection, REST fallback on disconnection and stale data, recovery only after fresh WebSocket data, Best Bid/Best Ask only, exact quantity without rounding, and absence of order submission/account-changing methods.
+- Limitations remain: no live KuCoin connection or private account access was exercised; no credentials, orders, transfers, withdrawals, or paid infrastructure were used. The fixed rate is an assumption, not account-specific KuCoin fee data.

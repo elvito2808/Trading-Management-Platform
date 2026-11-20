@@ -20,7 +20,7 @@
 | Phase | Scope | Status | Evidence / notes |
 |---|---|---|---|
 | Phase 0 | Repository audit and architecture | ACCEPTED | ALPHA's read-only audit; no code changes were part of that phase |
-| Phase 1 | KuCoin integration | PENDING_ALPHA_REVIEW | PR #5 is open and Draft. The latest implementation fix is committed on `feature/phase-1-kucoin-integration` at `d03e709ca3d9914ceebdbaea02cbb5ae71e4d1ce`; see the Agent 01 report for exact verification and limitations. |
+| Phase 1 | KuCoin integration | PENDING_ALPHA_REVIEW | PR #5 is open and Draft. The latest corrections are committed on `feature/phase-1-kucoin-integration`; see the Agent 01 report for exact verification and limitations. |
 | Phase 2 | Blockchain and DEX integration | NOT STARTED | Depends on agreed chain/DEX scope and stable adapter contracts |
 | Phase 3 | Arbitrage engine | NOT STARTED | Requires market-data and quote contracts |
 | Phase 4 | Multi-strategy management | NOT STARTED | Requires strategy lifecycle/runtime design |
@@ -97,7 +97,7 @@ This was an environment/access blocker, not an application-code failure. Agent 0
 - Implementation commit: `d03e709ca3d9914ceebdbaea02cbb5ae71e4d1ce`.
 - The adapter now uses only Level 1 Best Bid/Ask for REST market data; a single Classic Spot/Margin public WebSocket connection serves configured symbols and reconnects with bounded backoff.
 - The project-wide fee estimate is a fixed `Decimal("0.001")`; pair-specific and basic fee endpoints are not called. Trade quantities are supplied explicitly per symbol and are never rounded or derived from balances.
-- Python: 3.10.11. With `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1`, focused KuCoin tests: 53 passed; complete suite: 96 passed. Plain pytest plugin auto-loading is blocked by a pre-existing global `web3`/`eth_typing` plugin import error; exact commands are in the handoff report.
+- Python: 3.10.11. With `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1`, focused KuCoin tests: 55 passed; complete suite: 98 passed. Plain pytest plugin auto-loading is blocked by a pre-existing global `web3`/`eth_typing` plugin import error; exact commands are in the handoff report.
 - No live WebSocket, private-account, order, transfer, withdrawal, deposit, cancel, or amend operation was exercised or added.
 
 ## 9. Immediate next actions

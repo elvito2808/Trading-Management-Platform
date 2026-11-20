@@ -97,7 +97,9 @@ class KuCoinClient:
         self.api_key = api_key if api_key is not None else os.getenv("KUCOIN_API_KEY")
         self.api_secret = api_secret if api_secret is not None else os.getenv("KUCOIN_API_SECRET")
         self.api_passphrase = api_passphrase if api_passphrase is not None else os.getenv("KUCOIN_API_PASSPHRASE")
-        self.fee_policy = fee_policy or FixedFeePolicy()
+        if fee_policy is not None and fee_policy.rate != FixedFeePolicy().rate:
+            raise ValueError("KuCoin fee rate is fixed at Decimal('0.001')")
+        self.fee_policy = FixedFeePolicy()
         self._transport = transport or self._urllib_transport
         self._clock = clock or time.time
         self._sleeper = sleeper or time.sleep
@@ -347,6 +349,7 @@ class KuCoinClient:
             raise ExchangeResponseError("Best Bid/Ask values and sizes must be positive")
         if bid >= ask:
             raise ExchangeResponseError("Best Bid must be lower than Best Ask")
+        timestamp_field = "Time" if source is QuoteSource.WEBSOCKET else "time"
         return BestBidAskQuote(
             exchange="kucoin",
             symbol=symbol,
@@ -355,7 +358,7 @@ class KuCoinClient:
             best_ask=ask,
             ask_quantity=ask_size,
             source=source,
-            event_timestamp=KuCoinClient._exchange_timestamp(data.get("time")),
+            event_timestamp=KuCoinClient._exchange_timestamp(data.get(timestamp_field)),
             received_at=datetime.now(timezone.utc),
             freshness=QuoteFreshness.FRESH,
         )

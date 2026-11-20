@@ -100,9 +100,22 @@ def test_exchange_event_timestamp_normalizes_seconds_milliseconds_and_nanosecond
     expected = datetime.fromtimestamp(1700000000, timezone.utc)
     for event_time in (1700000000, 1700000000000, 1700000000000000000):
         quote = KuCoinClient.parse_websocket_quote(
-            "BNB-USDT", {**BBA, "time": event_time}
+            "BNB-USDT", {**BBA, "Time": event_time}
         )
         assert quote.event_timestamp == expected
+
+
+def test_websocket_official_time_field_is_used_instead_of_rest_time():
+    quote = KuCoinClient.parse_websocket_quote(
+        "BNB-USDT", {**BBA, "Time": 1700000000000, "time": 1}
+    )
+    assert quote.event_timestamp == datetime.fromtimestamp(1700000000, timezone.utc)
+
+
+def test_rest_level1_uses_lowercase_time_field_only():
+    payload = {**BBA, "time": 1700000000, "Time": 1}
+    quote = KuCoinClient(transport=FakeTransport([response(payload)])).get_best_bid_ask("BNB-USDT")
+    assert quote.event_timestamp == datetime.fromtimestamp(1700000000, timezone.utc)
 
 
 @pytest.mark.parametrize(
@@ -200,7 +213,7 @@ def test_fixed_fee_is_decimal_and_applied_once_for_each_direction(side, order_ty
 def test_fixed_fee_policy_is_shared_and_rejects_bad_rates():
     assert FIXED_TRADING_FEE_RATE == Decimal("0.001")
     assert FixedFeePolicy().estimate(Decimal("100")) == Decimal("0.100")
-    for rate in (Decimal("NaN"), Decimal("Infinity"), Decimal("-0.001")):
+    for rate in (Decimal("NaN"), Decimal("Infinity"), Decimal("-0.001"), Decimal("0.002")):
         with pytest.raises(ValueError):
             FixedFeePolicy(rate)
 

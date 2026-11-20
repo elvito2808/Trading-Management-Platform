@@ -18,6 +18,8 @@ Public REST and public WebSocket market data need no API key. Private balance re
 
 `BestBidAskQuote` records Decimal bid/ask prices and sizes, its source (`WEBSOCKET` or `REST`), optional exchange `event_timestamp`, local `received_at`, and freshness (`FRESH` or `STALE`). Retrieval time is never represented as exchange event time. The feed owns one public WebSocket connection for its configured symbols, reconnects with capped exponential backoff, and polls REST only when a configured symbol has no fresh WebSocket quote. REST requests are spaced and the initial feed gives the WebSocket a short opportunity to deliver before fallback.
 
+KuCoin Classic Spot/Margin WebSocket ticker messages name their exchange event timestamp `Time` (capital T); the REST Level 1 response names it `time` (lowercase). The parser selects the field for the message source, converts seconds, milliseconds, or nanoseconds to UTC, and leaves `event_timestamp` as `None` when that source field is absent or invalid. Local receipt time is never substituted.
+
 REST and WebSocket quotes are rejected if any required price or size is missing, non-finite, non-positive, or crossed (`bestBid >= bestAsk`). If fallback fails and only a stale quote is cached, `get_quote()` returns it with `freshness=STALE`; callers must not use it as current market data.
 
 ## Official KuCoin endpoints

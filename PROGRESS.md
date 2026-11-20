@@ -91,12 +91,12 @@ Detailed blocker, inspected architecture, exact clone error, and next-agent requ
 
 ### Agent 01 continuation — fixed fee and WebSocket-first Best Bid/Ask (2026-11-20)
 
-**Status: PENDING_ALPHA_REVIEW.** The latest implementation update is commit `d03e709ca3d9914ceebdbaea02cbb5ae71e4d1ce` on the existing `feature/phase-1-kucoin-integration` branch and [PR #5](https://github.com/elvito2808/Trading-Management-Platform/pull/5). PR #5 remains open and unmerged.
+**Status: PENDING_ALPHA_REVIEW.** The latest implementation update is on the existing `feature/phase-1-kucoin-integration` branch and [PR #5](https://github.com/elvito2808/Trading-Management-Platform/pull/5). PR #5 remains open and unmerged; ALPHA acceptance has not occurred.
 
 - Fee estimation now uses the central fixed `Decimal("0.001")` assumption; there is no pair-fee or basic-fee request.
 - KuCoin market data uses one public Classic Spot/Margin WebSocket connection for configured symbols, with Level 1 Best Bid/Ask REST fallback only. No full order book is retrieved or retained.
 - Fixed per-symbol quantity is supplied explicitly by the caller; no quantity is invented, rounded, or balance-sized.
-- Python 3.10.11: focused KuCoin suite **53 passed**; complete suite **96 passed**. Both successful runs disabled pytest plugin autoload because the global `web3.tools.pytest_ethereum` plugin fails to import `eth_typing.ContractName`. Exact commands and limitations are in the [Agent 01 report](docs/agents/reports/PHASE-1-KUCOIN-AGENT-01.md).
+- Python 3.10.11: focused KuCoin suite **55 passed**; complete suite **98 passed**. Both successful runs disabled pytest plugin autoload because the global `web3.tools.pytest_ethereum` plugin fails to import `eth_typing.ContractName`. Exact commands and limitations are in the [Agent 01 report](docs/agents/reports/PHASE-1-KUCOIN-AGENT-01.md).
 - No live KuCoin connection or real credentials were used, and no order/account-changing functionality was added.
 
 The original Phase 1 blocker records above are historical and remain preserved. See the [current project status](docs/PROJECT_STATUS.md), [implementation ledger](docs/agents/IMPLEMENTATION_STATE.md), and [continuation report](docs/agents/reports/PHASE-1-KUCOIN-AGENT-01.md) for reconciled evidence.
