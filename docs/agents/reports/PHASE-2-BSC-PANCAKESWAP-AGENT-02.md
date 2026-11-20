@@ -73,3 +73,34 @@ DOCS_VERIFIED = read from official docs on 2026-11-20; **not** checked on-chain.
 
 ## 7. Next steps
 ALPHA independently reviews Draft PR #6. Keep it Open and Unmerged; rerun read-only quote validation when a stable free public BSC RPC endpoint is available. Do not use paid infrastructure, private keys, signing, transactions, approvals, or transfers.
+
+## 8. Agent 04 final live-validation addendum (2026-11-20)
+
+This addendum preserves the historical results above and records the final bounded validation attempt. The isolated clone was switched to `feature/phase-2-bsc-pancakeswap-integration` at `db7f5f3300fb1e63804c8865129e768a052bfee7` before testing. No main branch, PR #5, or PR #6 was changed.
+
+### ABI verification
+
+The authoritative PancakeSwap source was fetched read-only from the official repository `pancakeswap/pancake-v3-contracts`, commit `986847948755cba528324d41be19480731c36c2a`:
+
+- `projects/v3-periphery/contracts/interfaces/IQuoterV2.sol`, `quoteExactInputSingle(QuoteExactInputSingleParams)` and `quoteExactOutputSingle(QuoteExactOutputSingleParams)` each use the five-word tuple `(address tokenIn, address tokenOut, uint256 amount[In/Out], uint24 fee, uint160 sqrtPriceLimitX96)` and return exactly four values: `uint256 amount[Out/In]`, `uint160 sqrtPriceX96After`, `uint32 initializedTicksCrossed`, `uint256 gasEstimate`.
+- `projects/v3-core/contracts/interfaces/pool/IPancakeV3PoolState.sol` defines `slot0()` as seven ABI words: `uint160 sqrtPriceX96`, signed `int24 tick`, `uint16 observationIndex`, `uint16 observationCardinality`, `uint16 observationCardinalityNext`, `uint32 feeProtocol`, and `bool unlocked`.
+- The implementation matches this layout: it encodes the five static tuple words, decodes all four QuoterV2 words, decodes `slot0` word 0 as unsigned, word 1 as signed 24-bit, and word 6 as the boolean. The added regression assertions explicitly cover `sqrtPriceX96After`, `initializedTicksCrossed`, and the four-word order.
+
+Source URLs: https://github.com/pancakeswap/pancake-v3-contracts/blob/986847948755cba528324d41be19480731c36c2a/projects/v3-periphery/contracts/interfaces/IQuoterV2.sol and https://github.com/pancakeswap/pancake-v3-contracts/blob/986847948755cba528324d41be19480731c36c2a/projects/v3-core/contracts/interfaces/pool/IPancakeV3PoolState.sol.
+
+### Exact test results
+
+- Mock/unit: `python -m unittest discover -s tests -p "test_dex_*.py" -v` — **55 passed, 7 skipped**. The skips are the opt-in live class; they are not passes.
+- Full suite: `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest -q` — **146 passed, 7 skipped**. The skips are the same opt-in live tests.
+- Live endpoint `https://bsc-dataseed.binance.org`, with `RUN_LIVE_BSC_TESTS=1`, `BSC_RPC_TIMEOUT_SECONDS=5`, and `BSC_RPC_MAX_RETRIES=1`: **5 passed, 1 error, 1 failure** in 164.578s. Chain ID 56, health, wrong-chain detection, USDT metadata, V2 deployment/pair, V3 deployment, and enabled tiers `(100, 500, 2500, 10000)` succeeded. The V2/V3 quote test errored on `missing trie node` while probing the V3 QuoterV2; full dry-run returned zero directions and failed its two-direction assertion. No quote succeeded in this run.
+- Live endpoint `https://bsc-dataseed1.binance.org`, with the same bounded settings: **2 passed, 4 errors, 1 failure** in 192.508s. The endpoint intermittently timed out during TLS/RPC calls and also returned `missing trie node`; no quote or complete dry-run was obtained.
+
+Therefore both V2 and V3 live quotes did **not** succeed in both directions, and full live Dry-Run did **not** succeed. These outcomes are endpoint/network/state-availability blockers, not evidence of an ABI defect. No paid RPC, private key, signing, broadcast, approval, transfer, withdrawal, or swap was used.
+
+### Gas semantics
+
+The mock/unit cases verified all required states: `ESTIMATED_NODE` is sourced only from local `eth_estimateGas`; `PARTIAL_POOL_ONLY` is explicitly labeled as the V3 QuoterV2 pool-level hint and excludes router/transfer/intrinsic gas; and `UNKNOWN` has no fabricated units, cost, or net result. Live gas could not be validated because no live quote completed. The live dry-run correctly withheld directions when prerequisite RPC data was unavailable.
+
+### Delivery
+
+Confirmed source change: one bounded regression test assertion update in `tests/test_dex_pancakeswap.py`; no runtime implementation correction was required. The report and test change are pending commit. Keep PR #6 Open, Draft, and Unmerged.

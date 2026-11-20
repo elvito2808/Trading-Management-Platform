@@ -131,6 +131,11 @@ class V3Tests(unittest.TestCase):
         self.assertEqual(qs.best.protocol_fee.raw, TENTH * 500 // 1_000_000)
         self.assertEqual(qs.best.gas_units_hint, 150_000)
         self.assertEqual(qs.best.router_crosscheck, "NOT_APPLICABLE")
+        # QuoterV2 single-pool output words are amountOut, sqrtPriceX96After,
+        # initializedTicksCrossed, and gasEstimate, in that order.
+        self.assertEqual(qs.best.extra["initialized_ticks_crossed"], 2)
+        self.assertEqual(qs.best.extra["sqrt_price_x96_after"], str(2 ** 96))
+        self.assertIn("sqrtPriceX96 after=", qs.best.liquidity_note)
 
     def test_exact_out_picks_lowest_input(self):
         chain, bsc, wbnb, usdt = setup()
