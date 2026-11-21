@@ -1,12 +1,22 @@
 # Living Implementation State & Handoff Ledger
 
+**ALPHA direct gas-estimation update (2026-11-21):** After baseline `d4599c7aa6ac27e6568e0c50c7d4575f94c4c73f`, ALPHA updated the Phase 2 runtime so the selected PancakeSwap V2 or V3 Router calldata is passed to `eth_estimateGas` for either direction. This is an implementation change only: at the owner's request, no tests or live RPC estimates were run. To obtain `ESTIMATED_NODE`, configure `BSC_GAS_SIMULATION_FROM` as a public address with native BNB for gas and the route's input token; ERC-20 input routes also require an existing allowance to the relevant Router. If node simulation reverts, V3 may retain only its explicitly partial QuoterV2 hint and V2 remains `UNKNOWN`; no net figure is published. Phase 2 remains `PARTIALLY COMPLETED` until the owner performs the requested live validation and ALPHA reviews its evidence.
+**PR #6 live branch tip:** authoritative current SHA is available from the [PR #6 commit history](https://github.com/elvito2808/Trading-Management-Platform/pull/6/commits). This file records the latest implementation baseline before this documentation-only reconciliation; a Git commit cannot contain its own resulting SHA without creating another commit.
+**Gas / profitability boundary:** `PARTIAL_POOL_ONLY` is only a pool-level QuoterV2 hint and excludes complete Router, token-transfer, and intrinsic transaction gas; `UNKNOWN` has no defensible gas amount. No successful, complete `eth_estimateGas` result for a realistic full router transaction is available in the recorded validation. Therefore no final/net profit or final net price may be published from these states. Pool fees are already reflected in swap quotes and must not be double-counted; network gas is a separate cost.
+
 **Repository:** https://github.com/elvito2808/Trading-Management-Platform
 **Default branch:** `main`
 **Ledger owner:** Agent 0 (Orchestrator); every implementing agent must update it in its own PR.
-**Current submitted HEAD:** `aa7d65d281647596c43e4417020f5ae91687606b` on `feature/phase-1-kucoin-integration`; confirmed against [PR #5](https://github.com/elvito2808/Trading-Management-Platform/pull/5).
+**Latest implementation baseline (PR #6 HEAD before this docs-only reconciliation):** `c046e39993f43456c1a3374247491f401b91f4cd`; base and PR #5 HEAD `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d`.
 **Previous submitted implementation HEAD (historical):** `b098b231c9ab3f6d35201a5a91828c3d5632d3ca`.
-**Phase 1 status:** `PENDING_ALPHA_REVIEW`; PR #5 is Open, Draft, and Unmerged. `main` was not modified.
-**Last verified:** 2026-11-21 (test run at exact PR head; independent ALPHA acceptance has not occurred).
+**Phase 1 status:** `PENDING_ALPHA_REVIEW`; PR #5 is Open, Draft, and Unmerged at submitted head `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d`. `main` was not modified.
+**Phase 2 status:** `PARTIALLY COMPLETED`; PR #6 is Open, Draft, and Unmerged; implementation baseline before this docs-only reconciliation `c046e39993f43456c1a3374247491f401b91f4cd`, base `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d`. The previous head `d66211e139b1df216ac00030091a14ced032978f` is historical and superseded.
+**Current evidence:** Agent-run Phase 2 focused suite 58 passed/7 skipped and full suite 173 passed/7 skipped; latest successful Mainnet run 7 live tests passed through `https://bsc.publicnode.com`; no CI checks were reported. This is not independent ALPHA verification.
+**Last reviewed:** 2026-11-21 (submitted branch state; ALPHA acceptance has not occurred).
+
+## Current alignment record
+
+The current Phase 1 head and PR #6 base are `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d`; alignment merge `3bdffb0921d29b4cdfcd6ca3cc2d3d7de1b3478d` is historical. Phase 1 remains `PENDING_ALPHA_REVIEW`; Phase 2 remains `PARTIALLY COMPLETED`. The conditional future Live Trading authorization in comment `7053863120` is acknowledged but does not authorize implementation or execution here.
 
 ## Ground rules
 This ledger is a handoff source, not a substitute for checking GitHub. On each session inspect default branch HEAD, open/merged PRs, CI, relevant files, and issues. If live evidence conflicts with this ledger, reconcile and correct it. Link commits, PRs, Actions runs, and tests for any status marked complete.
@@ -21,13 +31,14 @@ This ledger is a handoff source, not a substitute for checking GitHub. On each s
 - [ ] Exchange/Market Data, Wallet infrastructure, Execution, Portfolio, API/UI, full QA/Security and deployment are not implemented as baseline scope according to README and PROGRESS.
 
 ## Workstream tracker
-Update status values only with evidence: `NOT STARTED`, `IN PROGRESS`, `BLOCKED`, `IN REVIEW`, `ACCEPTED`.
+Update status values only with evidence: `NOT STARTED`, `IN PROGRESS`, `BLOCKED`, `IN REVIEW`, `PENDING_ALPHA_REVIEW`, `ACCEPTED`, `ACCEPTED WITH DEFERRED VALIDATION ITEMS`, `PARTIALLY COMPLETED`.
 
 | Workstream | Responsible prompt | Status | Depends on | Evidence / PR | Remaining / next action |
 |---|---|---|---|---|---|
 | Baseline & docs gaps | Agent 0 + Agent 6 | NOT STARTED | Existing main state | — | Re-audit docs and CI; establish acceptance checklist |
 | Core/Data maintenance | Agent 1 | ACCEPTED (Phase 2 documented) | Baseline | Phase 2 evidence in PROGRESS.md; revalidate | Avoid duplicate rebuild; handle concrete gaps only |
-| Exchange/Market Data & Wallet | Agent 2 | IN REVIEW | Core interfaces; security design | [PR #5](https://github.com/elvito2808/Trading-Management-Platform/pull/5), current submitted HEAD `aa7d65d281647596c43e4417020f5ae91687606b` | ALPHA independently reviews; keep PENDING_ALPHA_REVIEW until acceptance |
+| Exchange/Market Data & Wallet | Agent 2 | PENDING_ALPHA_REVIEW | Core interfaces; security design | [PR #5](https://github.com/elvito2808/Trading-Management-Platform/pull/5), submitted head `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d` | Deferred validation items remain in the Agent 01 report; PR stays Open, Draft, and Unmerged |
+| BSC / PancakeSwap read-only integration | Agent 02 | PARTIALLY COMPLETED | Phase 1 PR #5 head | [Draft PR #6](https://github.com/elvito2808/Trading-Management-Platform/pull/6), implementation baseline before this docs-only reconciliation `c046e39993f43456c1a3374247491f401b91f4cd`, base `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d`; previous head `d66211e139b1df216ac00030091a14ced032978f` is historical; alignment merge `3bdffb0921d29b4cdfcd6ca3cc2d3d7de1b3478d` is historical | Complete transaction gas and final/net profitability remain unavailable; independent ALPHA review pending |
 | Strategy & Risk | Agent 3 | NOT STARTED | Core/Data; market data contracts | — | Start definitions/signals and deterministic risk contracts |
 | Execution/Portfolio/Simulation | Agent 4 | NOT STARTED | Strategy/Risk contracts | — | Paper-only simulation before execution adapters |
 | API & UI | Agent 5 | NOT STARTED | Stable application services and DTOs | — | API contract proposal before implementation |
@@ -46,13 +57,13 @@ Append a newest-first entry for each merged/accepted PR:
 - Updated status and next work:
 - Known limitations / follow-up issue links:
 
-## In-progress work / handoff
-- Current active branch / PR: `feature/phase-1-kucoin-integration` at submitted HEAD `aa7d65d281647596c43e4417020f5ae91687606b`; [PR #5](https://github.com/elvito2808/Trading-Management-Platform/pull/5) is Open, Draft, and Unmerged
+## Superseded Phase 1 in-progress work / handoff
+- Current active branch / PR: `feature/phase-2-bsc-pancakeswap-integration` at submitted HEAD `ad75b0ff9433d3a22b651f686b5d123899377c6e`; [PR #6](https://github.com/elvito2808/Trading-Management-Platform/pull/6) is Open, Draft, and Unmerged. The remaining Agent 01 bullets in this superseded section describe PR #5 historical handoff context.
 - Agent: AGENT-01-KUCOIN
-- Objective: Maintain read-only KuCoin account data and WebSocket-first Best Bid/Ask market data, plus the deterministic local BNB/USDT BUY/SELL simulator required by ALPHA comment 7053740543.
+- Objective: Maintain read-only KuCoin account data and WebSocket-first Best Bid/Ask market data with local fixed-fee dry-run preparation.
 - Files/contracts reserved: `trading_platform/exchanges/`, `tests/test_kucoin.py`, KuCoin integration docs
-- Historical implementation commits: `d03e709ca3d9914ceebdbaea02cbb5ae71e4d1ce`; previous submitted implementation HEAD `b098b231c9ab3f6d35201a5a91828c3d5632d3ca`. The earlier submitted head `b56d25c7c4214b64eeaffb349e6c4a2d53f0d363` was superseded; the current head is recorded above.
-- Current local results on Python 3.10.11 at exact PR head: focused `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest -q tests/test_kucoin_dry_run.py` — `24 passed in 0.11s`; full `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest -q` — `122 passed in 1.69s`. Each had 0 failed, 0 skipped, 0 errors. This is agent-run evidence, not CI or independent acceptance. PR check status is pending with no reported statuses. Historical 55/98 counts are pre-simulator baseline only.
+- Historical implementation commits: `d03e709ca3d9914ceebdbaea02cbb5ae71e4d1ce`; previous submitted implementation HEAD `b098b231c9ab3f6d35201a5a91828c3d5632d3ca`. Current submitted HEAD: `316829506217cb817c69f04af5eaa9614a29feff`.
+- Agent-reported test results on Python 3.10.11: focused KuCoin `55 passed`; full suite `98 passed`. ALPHA has not independently rerun these tests. The successful commands disable plugin autoload due the global `web3.tools.pytest_ethereum`/`eth_typing.ContractName` import failure; exact commands and the plain-pytest collection failure are in the Agent 01 report. No combined status checks were reported for the latest reviewed commit; CI is not claimed as passed.
 - Blockers/limitations: no live public WebSocket or private-account connectivity was tested; fixed 0.1% is an estimate, not KuCoin fee data; no per-symbol trade quantities were supplied.
 - Next concrete action: ALPHA independently reviews updated PR #5; do not merge without separate authorization
 - Ledger updated in PR: yes
@@ -75,12 +86,15 @@ Record decisions here or link ADRs. Do not let agents independently invent overl
 - Agent 6 independent review and owner approval before merge where appropriate.
 - PR body cites exact test commands/results and CI run URLs.
 
+<!-- PHASE-2-BSC-PANCAKESWAP-INTEGRATION -->
+## Phase 2 - BNB Smart Chain + PancakeSwap V2/V3 (Agent 02) - PARTIALLY COMPLETED
 
-## Phase 1 Dry-Run simulator continuation — 2026-11-21
-
-A local-only `KuCoinBNBUSDTDryRunSimulator` was added under `trading_platform/execution/kucoin_dry_run.py` with isolated tests and documentation. It uses default BNB=5 / USDT=4000, BUY at Ask, SELL at Bid, and a fixed 0.1% USDT fee solely as a simulator accounting assumption. Actual KuCoin fee-currency settlement is not asserted. No live endpoint or account-changing functionality was added. The insufficient-balance fixture now reaches the balance validator; fee-inclusive BUY affordability, future quote, and wrong metadata-exchange cases were added. On 2026-11-21, at exact PR head `aa7d65d281647596c43e4417020f5ae91687606b` using Python 3.10.11, the focused suite reported `24 passed in 0.11s` and the full suite `122 passed in 1.69s` (0 failed, 0 skipped, 0 errors in either). These local results do not constitute CI or independent ALPHA acceptance.
-
-
-## Directive reconciliation — 2026-11-21
-
-Reviewed both owner comments: [7053740543](https://github.com/elvito2808/Trading-Management-Platform/pull/5#issuecomment-7053740543) defines the Phase 1 implementation scope, and [7053862674](https://github.com/elvito2808/Trading-Management-Platform/pull/5#issuecomment-7053862674) adds the conditional prohibition against starting Live Trading before Phase 1 and Phase 2 are independently accepted. No Live Trading implementation or real action was performed. Phase 1 remains PENDING_ALPHA_REVIEW.
+* Task ID: PHASE-2-BSC-PANCAKESWAP-INTEGRATION. Mode: READ-ONLY / DRY-RUN. Branch: `feature/phase-2-bsc-pancakeswap-integration`
+  (based on `feature/phase-1-kucoin-integration`, PR #5 head). PR #5 is NOT merged. Commit: 258e5a69b676d99f7069eda4c3ceb2fbc5112794. PR: https://github.com/elvito2808/Trading-Management-Platform/pull/6.
+* Implemented: `trading_platform/dex/` (BSC adapter, V2, V3, gas, registry, dry-run). KuCoin code untouched.
+* Focused suite (Python 3.10.11): 55 passed, 7 skipped (the skipped tests are the opt-in live tests). Full suite:
+  `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest -q` — 146 passed, 7 skipped.
+* Live validation remained blocked after bounded preflight of new free endpoints; `https://bsc-dataseed3.binance.org` returned 4 passed, 2 failures and 1 error, while `https://bsc.publicnode.com` timed out during quote/dry-run. `PARTIAL_POOL_ONLY` now withholds net output and reports `READY_GAS_PARTIAL`; `UNKNOWN` remains netless.
+  A second endpoint, `https://1rpc.io/bnb`, passed a chain-ID probe but timed out during suite setup before tests ran.
+  Chain ID 56 was confirmed, but full live quote/dry-run validation did not pass. See the report for exact details.
+* Full report: `docs/agents/reports/PHASE-2-BSC-PANCAKESWAP-AGENT-02.md`. Usage: `docs/BSC_PANCAKESWAP_INTEGRATION.md`.
