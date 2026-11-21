@@ -3,7 +3,7 @@
 **Repository:** https://github.com/elvito2808/Trading-Management-Platform  
 **Status snapshot date:** 2026-11-21  
 **Current implementation branch:** `feature/phase-1-kucoin-integration`
-**Current submitted HEAD:** `5f9a9b9613efe9927f05f13cc3d37533a0ed0410`
+**Current submitted HEAD at last recorded status:** `b56d25c7c4214b64eeaffb349e6c4a2d53f0d363` (superseded by the latest Phase 1 corrections; verify PR head for current SHA).
 **Previous submitted implementation HEAD (historical):** `b098b231c9ab3f6d35201a5a91828c3d5632d3ca`
 **Current phase status:** `PENDING_ALPHA_REVIEW`
 **PR #5:** Open, Draft, Unmerged. `main` was not modified.
@@ -125,4 +125,9 @@ This was an environment/access blocker, not an application-code failure. Agent 0
 
 ## 9. Phase 1 local simulator continuation — 2026-11-21
 
-Added `trading_platform/execution/kucoin_dry_run.py` as a local-only BNB/USDT simulator with default BNB=5 / USDT=4000, Ask BUY / Bid SELL, fixed 0.1% quote-currency fee accounting assumption, strict symbol/side/quantity/metadata/quote/top-of-book/balance validation, structured results and reset. Added isolated tests in `tests/test_kucoin_dry_run.py` and updated KuCoin/README documentation. No KuCoin price-retrieval or private-balance implementation was modified. Test commands/results and exact final HEAD are pending agent execution; this is not ALPHA acceptance.
+Added `trading_platform/execution/kucoin_dry_run.py` as a local-only BNB/USDT simulator with default BNB=5 / USDT=4000, Ask BUY / Bid SELL, fixed 0.1% quote-currency fee accounting assumption, strict symbol/side/quantity/metadata/quote/top-of-book/balance validation, structured results and reset. A review of ALPHA's original task comment (ID 7053740543) identified and fixed a test-fixture defect: the insufficient-balance cases previously exceeded the displayed top-of-book size first, so the tests did not reach the balance check. The fixture now has sufficient displayed depth, and explicit fee-inclusive BUY affordability, future-quote and metadata-exchange rejection tests were added. Added isolated tests in `tests/test_kucoin_dry_run.py` and updated KuCoin/README documentation. No KuCoin price-retrieval or private-balance implementation was modified. The simulator-focused test module now contains 24 cases (including parametrized cases). Tests were not executed in this session; no pass count is claimed. The previously reported 55 focused / 98 full-suite results predate this simulator and do not satisfy this task's acceptance requirement. Phase 1 remains PENDING_ALPHA_REVIEW, not accepted.
+
+
+## Correction against ALPHA's original task comment 7053740543
+
+The original directive is the controlling scope for this continuation. It requires the fixed 0.1% fee and deterministic local simulator, but does not contain the separate Phase 2 prerequisite or future Live Trading authorization language that appeared in the mistakenly forwarded agent directive 7053862674. Those statements must not be treated as scope/approval arising from comment 7053740543. No Live Trading implementation or action was undertaken. Phase 1 remains pending ALPHA's independent audit.
