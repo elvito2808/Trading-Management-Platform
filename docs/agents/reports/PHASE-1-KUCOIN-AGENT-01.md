@@ -9,7 +9,7 @@
 ### Current submitted state (2026-11-20)
 
 - Repository: `elvito2808/Trading-Management-Platform`.
-- Branch and current submitted HEAD: `feature/phase-1-kucoin-integration` at `cd07970b32396fed478fcdc6d85fa641e4033d26`.
+- Branch: `feature/phase-1-kucoin-integration`; use the live PR #5 head SHA as the current submitted commit (historical SHAs below are retained as history).
 - Previous submitted implementation HEAD `b098b231c9ab3f6d35201a5a91828c3d5632d3ca` is historical.
 - Phase 1 status: `PENDING_ALPHA_REVIEW`; PR #5 is Open, Draft, and Unmerged. `main` was not modified.
 - Test evidence is agent-reported, not independently rerun by ALPHA: focused tests **55 passed**; full suite **98 passed** on Python 3.10.11 using the plugin-disabled commands below. No combined status checks were reported for the latest reviewed commit; CI is not claimed as passed.
