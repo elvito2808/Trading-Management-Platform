@@ -433,3 +433,10 @@ This update records the previous documentation reconciliation. At that time, `b0
 - This task corrects current submitted HEAD references only; no implementation code or tests changed, and no tests were rerun.
 - Test results remain agent-reported: focused 55 passed and full suite 98 passed. ALPHA has not independently rerun them.
 - PR #5 remains Open, Draft, and Unmerged. `main` was not modified. ALPHA acceptance has not occurred; status remains `PENDING_ALPHA_REVIEW`.
+
+
+## Local BNB/USDT simulator continuation — 2026-11-21
+
+Added a local-only simulator at `trading_platform/execution/kucoin_dry_run.py` and focused tests at `tests/test_kucoin_dry_run.py`. Defaults are BNB=5 / USDT=4000; BUY uses Ask and SELL uses Bid; fee rate is fixed at 0.001 and accounted in USDT solely as a deterministic simulator assumption. Actual KuCoin fee currency is not asserted. Simulator rejects invalid symbol/side/quantity/metadata/quote, stale quotes, quantities exceeding displayed top-of-book size, minimum-funds violations and insufficient balances without mutating state; reset restores configured starting balances. Documentation now describes example arithmetic and slippage/depth limitations.
+
+No live order endpoint, live account action, signing, broadcast, transfer or withdrawal was invoked. Price retrieval and private-balance retrieval were not modified. Agent test execution and final commit SHA must be recorded after verification; ALPHA independent acceptance remains pending.
