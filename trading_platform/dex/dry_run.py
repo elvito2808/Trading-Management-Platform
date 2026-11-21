@@ -15,7 +15,9 @@ from typing import Any, Optional
 
 from .bsc import BNB_DECIMALS, BscAdapter, require_valid
 from .errors import DexError, InvalidInputError
-from .gas import GasEstimator, build_v2_swap_exact_eth_for_tokens_call
+from .gas import (GasEstimator, build_v2_swap_exact_eth_for_tokens_call,
+                  build_v2_swap_tokens_for_exact_eth_calldata,
+                  build_v3_exact_input_single_calldata, build_v3_exact_output_single_calldata)
 from .models import (
     BlockInfo,
     DataValidity,
@@ -176,14 +178,11 @@ class DryRunPreparer:
         net: Optional[TokenAmount] = None
         net_basis = "no usable quote"
         if selected is not None:
-            node_call = None
-            if (self._gas.simulation_sender and selected.dex.endswith("V2") and direction is Direction.BNB_TO_USDT):
-                node_call = build_v2_swap_exact_eth_for_tokens_call(
-                    self._registry.address("v2_router"), wbnb.address, usdt.address, FIXED_BNB_AMOUNT_WEI,
-                    self._gas.simulation_sender, block)
-            gas = self._gas.estimate(self._usdt_per_bnb(selected),
-                                     f"{selected.dex} pool {selected.pool_address} pre-trade mid price at block {block.number}",
-                                     usdt, block, node_call=node_call, quoter_gas_hint=selected.gas_units_hint)
+            node_call = self._build_node_simulation_call(selected, direction, wbnb, usdt, block)
+            gas = self._gas.estimate(
+                self._usdt_per_bnb(selected),
+                f"{selected.dex} pool {selected.pool_address} pre-trade mid price at block {block.number}",
+                usdt, block, node_call=node_call, quoter_gas_hint=selected.gas_units_hint)
             net, net_basis = self._net(direction, selected, gas, usdt)
 
         errors = self._validate(direction, block, selected, v2_quote, v3_set.best, fixed)
@@ -204,6 +203,44 @@ class DryRunPreparer:
             v3_candidates=v3_set.candidates, v3_failures=v3_set.failures,
             v3_enabled_fee_tiers_ppm=v3_set.enabled_fee_tiers_ppm, selected=selected, selection_rule=rule,
             gas=gas, net_output=net, net_basis=net_basis, plan=plan, validation_errors=tuple(errors), status=status)
+
+    def _build_node_simulation_call(self, quote: SwapQuote, direction: Direction,
+                                    wbnb: TokenInfo, usdt: TokenInfo, block: BlockInfo) -> Optional[dict[str, str]]:
+        """Build the selected Router call for eth_estimateGas; never sign or submit it."""
+        sender = self._gas.simulation_sender
+        if not sender:
+            return None
+
+        if quote.dex.endswith("V2"):
+            if direction is Direction.BNB_TO_USDT:
+                # Native BNB is wrapped by the V2 Router; sender needs 0.1 BNB plus gas.
+                return build_v2_swap_exact_eth_for_tokens_call(
+                    self._registry.address("v2_router"), wbnb.address, usdt.address,
+                    FIXED_BNB_AMOUNT_WEI, sender, block)
+            # Exact-output USDT -> WBNB; the sender needs USDT and a pre-existing
+            # allowance to V2 Router. Native BNB is also needed to pay simulated gas.
+            call = build_v2_swap_tokens_for_exact_eth_calldata(
+                self._registry.address("v2_router"), FIXED_BNB_AMOUNT_WEI, quote.amount_in.raw,
+                [usdt.address, wbnb.address], sender, block)
+            call["from"] = sender
+            return call
+
+        if quote.dex.endswith("V3"):
+            router = self._registry.address("v3_swap_router")
+            if quote.mode is QuoteMode.EXACT_IN:
+                call = build_v3_exact_input_single_calldata(
+                    router, quote.token_in.address, quote.token_out.address, quote.pool_fee_ppm,
+                    sender, quote.amount_in.raw, amount_out_minimum=0)
+            else:
+                call = build_v3_exact_output_single_calldata(
+                    router, quote.token_in.address, quote.token_out.address, quote.pool_fee_ppm,
+                    sender, quote.amount_out.raw, amount_in_maximum=quote.amount_in.raw)
+            # V3 input is ERC-20: sender needs the input token, Router allowance,
+            # and native BNB for simulated gas.
+            call["from"] = sender
+            return call
+
+        return None
 
     @staticmethod
     def _net(direction: Direction, quote: SwapQuote, gas: GasEstimate, usdt: TokenInfo) -> tuple[Optional[TokenAmount], str]:

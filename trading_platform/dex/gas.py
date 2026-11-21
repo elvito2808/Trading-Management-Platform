@@ -121,12 +121,13 @@ class GasEstimator:
         if node_call is not None:
             try:
                 units = self._bsc.estimate_gas(node_call, block=block.number)
-                status, method = GasStatus.ESTIMATED_NODE, "eth_estimateGas on the real swap call (local simulation, public sender)"
+                status, method = GasStatus.ESTIMATED_NODE, "eth_estimateGas on selected PancakeSwap Router calldata (local simulation; public sender)"
             except DexError as exc:
                 notes.append(f"node gas estimate failed: {exc}")
         else:
-            notes.append(f"no node simulation call available (set {ENV_SIMULATION_FROM} to a public address holding BNB "
-                         "for the BNB->USDT V2 path); other paths cannot be simulated without allowances")
+            notes.append(f"no Router simulation call available: set {ENV_SIMULATION_FROM} to a public address; "
+                         "the selected route also requires the input-token balance and an existing Router "
+                         "allowance (for ERC-20 input), plus native BNB for gas")
         if units is None and quoter_gas_hint:
             units = quoter_gas_hint
             status, method = GasStatus.PARTIAL_POOL_ONLY, "V3 QuoterV2 gasEstimate (pool-level only)"

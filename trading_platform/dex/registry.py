@@ -110,7 +110,7 @@ BSC_CONTRACTS: tuple[ContractRecord, ...] = (
         key="v3_swap_router", name="SwapRouter (V3)", protocol_version="PancakeSwap V3",
         address="0x1b81D678ffb9C0263b24A97847620C99d213eB14", network=BSC_NETWORK, chain_id=BSC_CHAIN_ID,
         source=_V3_DOC, status=VerificationStatus.DOCS_VERIFIED,
-        notes="Informational only. Never called by this phase.",
+        notes="Used only as the target of local eth_estimateGas simulations; no transaction is signed or submitted.",
     ),
 )
 
