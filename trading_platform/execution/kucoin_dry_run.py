@@ -58,7 +58,7 @@ class KuCoinBNBUSDTDryRunSimulator:
         elif sd not in ("BUY","SELL"): reason="side must be BUY or SELL"
         elif qerr: reason=qerr
         elif qty<=ZERO: reason="quantity must be positive"
-        elif not isinstance(metadata,SymbolMetadata) or metadata.symbol.upper()!=self.SYMBOL or metadata.base_currency.upper()!="BNB" or metadata.quote_currency.upper()!="USDT": reason="matching BNB-USDT symbol metadata is required"
+        elif not isinstance(metadata,SymbolMetadata) or metadata.exchange.casefold()!="kucoin" or metadata.symbol.upper()!=self.SYMBOL or metadata.base_currency.upper()!="BNB" or metadata.quote_currency.upper()!="USDT": reason="matching KuCoin BNB-USDT symbol metadata is required"
         elif metadata.trading_enabled is not True: reason="symbol is not enabled for trading"
         elif metadata.quantity_increment is None or metadata.quantity_increment<=ZERO: reason="valid baseIncrement metadata is required"
         elif metadata.base_min_size is not None and qty<metadata.base_min_size: reason="quantity is below baseMinSize"
