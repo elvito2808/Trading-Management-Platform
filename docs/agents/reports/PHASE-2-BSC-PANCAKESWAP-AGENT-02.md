@@ -2,18 +2,20 @@
 
 ## Current Closeout
 
-**Authoritative validation implementation commit:** `8a9e28c9d416d686a5be77b177e2bb7672040639` (the final documentation closeout commit is the branch tip reported with delivery).
+**Current PR #6 HEAD before this documentation correction:** `d66211e139b1df216ac00030091a14ced032978f`.
+**Current PR #6 base SHA:** `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d`.
+**Historical alignment merge:** `3bdffb0921d29b4cdfcd6ca3cc2d3d7de1b3478d`.
 **PR #6:** Open, Draft, and Unmerged. `main` and PR #5 were not modified.
-**Canonical status:** Phase 0 `ACCEPTED`; Phase 1 `ACCEPTED WITH DEFERRED VALIDATION ITEMS`; Phase 2 `PARTIALLY COMPLETED`; Phases 3–7 `NOT STARTED`.
+**Canonical status:** Phase 0 `ACCEPTED`; Phase 1 `PENDING_ALPHA_REVIEW`; Phase 2 `PARTIALLY COMPLETED`; Phases 3–7 `NOT STARTED`.
 **Historical references:** previous alignment HEAD `24842491e1cf6a55a5a4bb6c8a5ebdf73e36b80f`; closeout predecessor `84fb93aa95ceb2f63325bcededcdb5705935ea95`; gas-semantics correction commit `58932bd5c3b49352ed4646f36df88978c36ce908`.
 **Evidence status:** Independent bounded validation in this closeout reached BSC Mainnet through `https://bsc.publicnode.com`; all seven live tests passed with a 180-second freshness bound. Gas remained `PARTIAL_POOL_ONLY`, so final/net profitability was withheld. Phase 2 remains `PARTIALLY COMPLETED` pending ALPHA acceptance of complete transaction-gas validation.
 
 **Final status:** `PARTIALLY COMPLETED - LIVE QUOTES AND DRY-RUN VERIFIED; COMPLETE TRANSACTION GAS UNAVAILABLE`
 Date: 2026-11-21 | Mode: READ-ONLY / DRY-RUN | Network: BSC Mainnet (chain 56)
 
-### Final Phase 1 base alignment (2026-11-21)
+### Final Phase 1 base alignment (historical, 2026-11-21)
 
-The primary and supplementary instructions in comments `7053741167` and `7053863120` were reread. The supplementary Live Trading authorization remains conditional on independent ALPHA acceptance and does not authorize implementation or real execution here. PR #6's prior base was `aa7d65d281647596c43e4417020f5ae91687606b`; the requested current Phase 1 head is `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d`. A normal merge is being made from that head into Phase 2; no rebase, reset, force-push, PR merge, main change, signing, broadcast, or financial action is authorized.
+The primary and supplementary instructions in comments `7053741167` and `7053863120` were reread. The supplementary Live Trading authorization remains conditional on independent ALPHA acceptance and does not authorize implementation or real execution here. PR #6's prior base was `aa7d65d281647596c43e4417020f5ae91687606b`; the requested Phase 1 head was `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d`. The normal alignment merge is historical; no rebase, reset, force-push, PR merge, main change, signing, broadcast, or financial action was authorized.
 
 ### ALPHA comment and branch-alignment closeout
 

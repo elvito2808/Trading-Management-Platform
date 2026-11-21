@@ -3,22 +3,22 @@
 **Repository:** https://github.com/elvito2808/Trading-Management-Platform
 **Default branch:** `main`
 **Current implementation branch:** `feature/phase-2-bsc-pancakeswap-integration`
-**Current submitted HEAD:** alignment merge `3bdffb0921d29b4cdfcd6ca3cc2d3d7de1b3478d`, incorporating Phase 1 head `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d`.
+**Current submitted HEAD before this documentation correction:** `d66211e139b1df216ac00030091a14ced032978f`; base `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d`.
 **Previous submitted implementation HEAD (historical):** `b098b231c9ab3f6d35201a5a91828c3d5632d3ca`
 **Current phase:** Phase 2 — BNB Smart Chain + PancakeSwap V2/V3
 **Current status:** `PARTIALLY COMPLETED`
-**PR #5:** Open, Draft, Unmerged at `316829506217cb817c69f04af5eaa9614a29feff`. `main` was not modified.
-**PR #6:** Open, Draft, Unmerged; alignment head `3bdffb0921d29b4cdfcd6ca3cc2d3d7de1b3478d`. `main` was not modified.
+**PR #5:** Open, Draft, Unmerged at `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d`. `main` was not modified.
+**PR #6:** Open, Draft, Unmerged; head before this documentation correction `d66211e139b1df216ac00030091a14ced032978f`, base `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d`. `main` was not modified.
 
-**Current test evidence:** Agent-reported Phase 2 results; ALPHA has not independently rerun tests in this documentation-only reconciliation. Focused suite: **55 passed/7 skipped**; full suite: **146 passed/7 skipped**. No CI checks were reported; no CI pass is claimed here. Live quote/dry-run validation remains blocked by free public RPC failures.
+**Current test evidence:** Agent-run Phase 2 focused suite **58 passed/7 skipped** and full suite **173 passed/7 skipped**; no CI checks were reported. The latest successful Mainnet run was agent-run: **7 live tests passed** through `https://bsc.publicnode.com`; this is not independent ALPHA verification. Complete transaction gas and final/net profitability remain unavailable.
 
-**Canonical phase statuses:** Phase 0 `ACCEPTED`; Phase 1 `ACCEPTED WITH DEFERRED VALIDATION ITEMS`; Phase 2 `PARTIALLY COMPLETED`; Phases 3–7 `NOT STARTED`.
+**Canonical phase statuses:** Phase 0 `ACCEPTED`; Phase 1 `PENDING_ALPHA_REVIEW`; Phase 2 `PARTIALLY COMPLETED`; Phases 3–7 `NOT STARTED`.
 
 The records below that describe the former metadata-persistence Phase 2 or earlier Phase 1 states are **superseded historical records**. They remain preserved for audit history and do not override this current summary.
 
 ## Current Phase 1 / Phase 2 alignment record
 
-The latest Phase 1 base branch head is `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d`; PR #6 previously recorded base SHA `aa7d65d281647596c43e4417020f5ae91687606b`. The Phase 1 branch's latest test-evidence documentation is preserved by this alignment merge. Phase 1 remains `ACCEPTED WITH DEFERRED VALIDATION ITEMS`, Phase 2 remains `PARTIALLY COMPLETED`, and the conditional Live Trading authorization in PR #6 comment `7053863120` does not authorize implementation or real execution in this task.
+The latest Phase 1 branch head is `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d`; PR #6 is based on that head. Phase 1 remains `PENDING_ALPHA_REVIEW`, Phase 2 remains `PARTIALLY COMPLETED`, and the conditional Live Trading authorization in PR #6 comment `7053863120` does not authorize implementation or real execution in this task.
 
 ## Superseded historical project snapshot — Phase 2 metadata and persistence
 

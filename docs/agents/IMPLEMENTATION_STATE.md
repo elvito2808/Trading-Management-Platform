@@ -3,16 +3,16 @@
 **Repository:** https://github.com/elvito2808/Trading-Management-Platform
 **Default branch:** `main`
 **Ledger owner:** Agent 0 (Orchestrator); every implementing agent must update it in its own PR.
-**Current submitted HEAD:** alignment merge `3bdffb0921d29b4cdfcd6ca3cc2d3d7de1b3478d`, incorporating Phase 1 head `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d`.
+**Current submitted HEAD before this documentation correction:** `d66211e139b1df216ac00030091a14ced032978f`; base `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d`.
 **Previous submitted implementation HEAD (historical):** `b098b231c9ab3f6d35201a5a91828c3d5632d3ca`.
-**Phase 1 status:** `ACCEPTED WITH DEFERRED VALIDATION ITEMS`; PR #5 is Open, Draft, and Unmerged at submitted head `316829506217cb817c69f04af5eaa9614a29feff`. `main` was not modified.
-**Phase 2 status:** `PARTIALLY COMPLETED`; PR #6 is Open, Draft, and Unmerged; alignment head `3bdffb0921d29b4cdfcd6ca3cc2d3d7de1b3478d`.
-**Current evidence:** Agent-reported Phase 2 focused suite 55 passed/7 skipped and full suite 146 passed/7 skipped; no CI checks were reported. This ledger update is documentation-only and is not independent test verification.
+**Phase 1 status:** `PENDING_ALPHA_REVIEW`; PR #5 is Open, Draft, and Unmerged at submitted head `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d`. `main` was not modified.
+**Phase 2 status:** `PARTIALLY COMPLETED`; PR #6 is Open, Draft, and Unmerged; head before this documentation correction `d66211e139b1df216ac00030091a14ced032978f`, base `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d`.
+**Current evidence:** Agent-run Phase 2 focused suite 58 passed/7 skipped and full suite 173 passed/7 skipped; latest successful Mainnet run 7 live tests passed through `https://bsc.publicnode.com`; no CI checks were reported. This is not independent ALPHA verification.
 **Last reviewed:** 2026-11-20 (submitted branch state; ALPHA acceptance has not occurred).
 
 ## Current alignment record
 
-The latest Phase 1 base head is `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d`; the historical PR #6 base SHA was `aa7d65d281647596c43e4417020f5ae91687606b`. GitHub reported `dirty` because the three shared status documents diverged. The standard merge preserves both Phase 1 and Phase 2 work. The conditional future Live Trading authorization in comment `7053863120` is acknowledged but does not authorize implementation or execution here.
+The current Phase 1 head and PR #6 base are `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d`; alignment merge `3bdffb0921d29b4cdfcd6ca3cc2d3d7de1b3478d` is historical. Phase 1 remains `PENDING_ALPHA_REVIEW`; Phase 2 remains `PARTIALLY COMPLETED`. The conditional future Live Trading authorization in comment `7053863120` is acknowledged but does not authorize implementation or execution here.
 
 ## Ground rules
 This ledger is a handoff source, not a substitute for checking GitHub. On each session inspect default branch HEAD, open/merged PRs, CI, relevant files, and issues. If live evidence conflicts with this ledger, reconcile and correct it. Link commits, PRs, Actions runs, and tests for any status marked complete.
@@ -27,14 +27,14 @@ This ledger is a handoff source, not a substitute for checking GitHub. On each s
 - [ ] Exchange/Market Data, Wallet infrastructure, Execution, Portfolio, API/UI, full QA/Security and deployment are not implemented as baseline scope according to README and PROGRESS.
 
 ## Workstream tracker
-Update status values only with evidence: `NOT STARTED`, `IN PROGRESS`, `BLOCKED`, `IN REVIEW`, `ACCEPTED`, `ACCEPTED WITH DEFERRED VALIDATION ITEMS`, `PARTIALLY COMPLETED`.
+Update status values only with evidence: `NOT STARTED`, `IN PROGRESS`, `BLOCKED`, `IN REVIEW`, `PENDING_ALPHA_REVIEW`, `ACCEPTED`, `ACCEPTED WITH DEFERRED VALIDATION ITEMS`, `PARTIALLY COMPLETED`.
 
 | Workstream | Responsible prompt | Status | Depends on | Evidence / PR | Remaining / next action |
 |---|---|---|---|---|---|
 | Baseline & docs gaps | Agent 0 + Agent 6 | NOT STARTED | Existing main state | — | Re-audit docs and CI; establish acceptance checklist |
 | Core/Data maintenance | Agent 1 | ACCEPTED (Phase 2 documented) | Baseline | Phase 2 evidence in PROGRESS.md; revalidate | Avoid duplicate rebuild; handle concrete gaps only |
-| Exchange/Market Data & Wallet | Agent 2 | ACCEPTED WITH DEFERRED VALIDATION ITEMS | Core interfaces; security design | [PR #5](https://github.com/elvito2808/Trading-Management-Platform/pull/5), submitted head `316829506217cb817c69f04af5eaa9614a29feff` | Deferred validation items remain in the Agent 01 report; PR stays Open, Draft, and Unmerged |
-| BSC / PancakeSwap read-only integration | Agent 02 | PARTIALLY COMPLETED | Phase 1 PR #5 head | [Draft PR #6](https://github.com/elvito2808/Trading-Management-Platform/pull/6), current head `ad75b0ff9433d3a22b651f686b5d123899377c6e`, historical predecessor `84fb93aa95ceb2f63325bcededcdb5705935ea95`, correction commit `58932bd5c3b49352ed4646f36df88978c36ce908` | Live quote/dry-run validation remains blocked by free public RPC failures; no CI checks reported |
+| Exchange/Market Data & Wallet | Agent 2 | PENDING_ALPHA_REVIEW | Core interfaces; security design | [PR #5](https://github.com/elvito2808/Trading-Management-Platform/pull/5), submitted head `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d` | Deferred validation items remain in the Agent 01 report; PR stays Open, Draft, and Unmerged |
+| BSC / PancakeSwap read-only integration | Agent 02 | PARTIALLY COMPLETED | Phase 1 PR #5 head | [Draft PR #6](https://github.com/elvito2808/Trading-Management-Platform/pull/6), current pre-correction head `d66211e139b1df216ac00030091a14ced032978f`, base `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d`, historical alignment merge `3bdffb0921d29b4cdfcd6ca3cc2d3d7de1b3478d` | Complete transaction gas and final/net profitability remain unavailable; independent ALPHA review pending |
 | Strategy & Risk | Agent 3 | NOT STARTED | Core/Data; market data contracts | — | Start definitions/signals and deterministic risk contracts |
 | Execution/Portfolio/Simulation | Agent 4 | NOT STARTED | Strategy/Risk contracts | — | Paper-only simulation before execution adapters |
 | API & UI | Agent 5 | NOT STARTED | Stable application services and DTOs | — | API contract proposal before implementation |
