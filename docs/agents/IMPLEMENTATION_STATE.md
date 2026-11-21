@@ -3,7 +3,7 @@
 **Repository:** https://github.com/elvito2808/Trading-Management-Platform
 **Default branch:** `main`
 **Ledger owner:** Agent 0 (Orchestrator); every implementing agent must update it in its own PR.
-**Current submitted HEAD:** `cd07970b32396fed478fcdc6d85fa641e4033d26` on `feature/phase-1-kucoin-integration`.
+**Current submitted HEAD:** `5f9a9b9613efe9927f05f13cc3d37533a0ed0410` on `feature/phase-1-kucoin-integration`.
 **Previous submitted implementation HEAD (historical):** `b098b231c9ab3f6d35201a5a91828c3d5632d3ca`.
 **Phase 1 status:** `PENDING_ALPHA_REVIEW`; PR #5 is Open, Draft, and Unmerged. `main` was not modified.
 **Last reviewed:** 2026-11-20 (submitted branch state; ALPHA acceptance has not occurred).
@@ -27,7 +27,7 @@ Update status values only with evidence: `NOT STARTED`, `IN PROGRESS`, `BLOCKED`
 |---|---|---|---|---|---|
 | Baseline & docs gaps | Agent 0 + Agent 6 | NOT STARTED | Existing main state | — | Re-audit docs and CI; establish acceptance checklist |
 | Core/Data maintenance | Agent 1 | ACCEPTED (Phase 2 documented) | Baseline | Phase 2 evidence in PROGRESS.md; revalidate | Avoid duplicate rebuild; handle concrete gaps only |
-| Exchange/Market Data & Wallet | Agent 2 | IN REVIEW | Core interfaces; security design | [PR #5](https://github.com/elvito2808/Trading-Management-Platform/pull/5), current submitted HEAD `cd07970b32396fed478fcdc6d85fa641e4033d26` | ALPHA independently reviews; keep PENDING_ALPHA_REVIEW until acceptance |
+| Exchange/Market Data & Wallet | Agent 2 | IN REVIEW | Core interfaces; security design | [PR #5](https://github.com/elvito2808/Trading-Management-Platform/pull/5), current submitted HEAD `5f9a9b9613efe9927f05f13cc3d37533a0ed0410` | ALPHA independently reviews; keep PENDING_ALPHA_REVIEW until acceptance |
 | Strategy & Risk | Agent 3 | NOT STARTED | Core/Data; market data contracts | — | Start definitions/signals and deterministic risk contracts |
 | Execution/Portfolio/Simulation | Agent 4 | NOT STARTED | Strategy/Risk contracts | — | Paper-only simulation before execution adapters |
 | API & UI | Agent 5 | NOT STARTED | Stable application services and DTOs | — | API contract proposal before implementation |
@@ -47,11 +47,11 @@ Append a newest-first entry for each merged/accepted PR:
 - Known limitations / follow-up issue links:
 
 ## In-progress work / handoff
-- Current active branch / PR: `feature/phase-1-kucoin-integration` at submitted HEAD `cd07970b32396fed478fcdc6d85fa641e4033d26`; [PR #5](https://github.com/elvito2808/Trading-Management-Platform/pull/5) is Open, Draft, and Unmerged
+- Current active branch / PR: `feature/phase-1-kucoin-integration` at submitted HEAD `5f9a9b9613efe9927f05f13cc3d37533a0ed0410`; [PR #5](https://github.com/elvito2808/Trading-Management-Platform/pull/5) is Open, Draft, and Unmerged
 - Agent: AGENT-01-KUCOIN
 - Objective: Maintain read-only KuCoin account data and WebSocket-first Best Bid/Ask market data with local fixed-fee dry-run preparation.
 - Files/contracts reserved: `trading_platform/exchanges/`, `tests/test_kucoin.py`, KuCoin integration docs
-- Historical implementation commits: `d03e709ca3d9914ceebdbaea02cbb5ae71e4d1ce`; previous submitted implementation HEAD `b098b231c9ab3f6d35201a5a91828c3d5632d3ca`. Current submitted HEAD: `cd07970b32396fed478fcdc6d85fa641e4033d26`.
+- Historical implementation commits: `d03e709ca3d9914ceebdbaea02cbb5ae71e4d1ce`; previous submitted implementation HEAD `b098b231c9ab3f6d35201a5a91828c3d5632d3ca`. Current submitted HEAD: `5f9a9b9613efe9927f05f13cc3d37533a0ed0410`.
 - Agent-reported test results on Python 3.10.11: focused KuCoin `55 passed`; full suite `98 passed`. ALPHA has not independently rerun these tests. The successful commands disable plugin autoload due the global `web3.tools.pytest_ethereum`/`eth_typing.ContractName` import failure; exact commands and the plain-pytest collection failure are in the Agent 01 report. No combined status checks were reported for the latest reviewed commit; CI is not claimed as passed.
 - Blockers/limitations: no live public WebSocket or private-account connectivity was tested; fixed 0.1% is an estimate, not KuCoin fee data; no per-symbol trade quantities were supplied.
 - Next concrete action: ALPHA independently reviews updated PR #5; do not merge without separate authorization
