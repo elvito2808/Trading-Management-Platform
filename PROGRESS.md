@@ -116,3 +116,8 @@ The original Phase 1 blocker records above are historical and remain preserved. 
 **Status remains BLOCKED — no implementation or tests.** The only local execution runtime inspected provides Python 3.13.5 and Git 2.47.3, but has no outbound DNS/network: `github.com`, `api.github.com`, and `www.kucoin.com` fail name resolution; Python HTTPS probes return `[Errno -3] Temporary failure in name resolution`. No separate terminal/workspace/Codespaces runtime was available, and no paid environment was provisioned.
 
 The required branch was rechecked before updating: `feature/arbitrage-live-integration` at `92c4fe17f423814de1da3369cfb5e1257a2115e0`, ahead of `main` by 2 commits and behind by 0; merge base remains `2ea9f39f5cd1bc97253a2eabadf1753fbc1b6ea6`. Both earlier commits were preserved. No application files were modified and no tests were run. Detailed environment checks and exact errors are recorded in the [continuation report](docs/agents/reports/PHASE-1-KUCOIN-AGENT-01.md).
+
+
+## Phase 1 local simulator continuation — 2026-11-21
+
+A local-only BNB/USDT Dry-Run simulator was added on `feature/phase-1-kucoin-integration`: default BNB=5 / USDT=4000, Ask BUY / Bid SELL, fixed 0.1% USDT fee assumption, validation, structured results and reset. No live order endpoint is used. Agent test evidence and ALPHA independent review remain pending.
