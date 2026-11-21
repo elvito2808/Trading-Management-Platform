@@ -5,7 +5,7 @@ from trading_platform.exchanges.models import BestBidAskQuote,QuoteFreshness,Quo
 from trading_platform.execution.kucoin_dry_run import KuCoinBNBUSDTDryRunSimulator
 NOW=datetime(2026,11,21,tzinfo=timezone.utc)
 META=SymbolMetadata("kucoin","BNB-USDT","BNB","USDT",True,Decimal(".001"),Decimal("100"),min_funds=Decimal("10"),quantity_increment=Decimal(".001"))
-QUOTE=BestBidAskQuote("kucoin","BNB-USDT",Decimal("600"),Decimal("2"),Decimal("601"),Decimal("2"),QuoteSource.REST,None,NOW)
+QUOTE=BestBidAskQuote("kucoin","BNB-USDT",Decimal("600"),Decimal("200"),Decimal("601"),Decimal("200"),QuoteSource.REST,None,NOW)
 def sim(): return KuCoinBNBUSDTDryRunSimulator(clock=lambda:NOW)
 def test_buy_arithmetic_and_reconciliation():
  s=sim(); r=s.execute("BNB-USDT","BUY",".1",META,QUOTE)
@@ -40,3 +40,23 @@ def test_reset_and_configurable_start_balances():
  assert KuCoinBNBUSDTDryRunSimulator("2","100",clock=lambda:NOW).balances.BNB==Decimal(2)
 def test_fee_rate_fixed():
  with pytest.raises(ValueError): KuCoinBNBUSDTDryRunSimulator(fee_rate=Decimal(".002"))
+
+def test_buy_rejects_when_gross_fits_but_fee_exceeds_usdt_balance():
+ s=KuCoinBNBUSDTDryRunSimulator("5","60.1",clock=lambda:NOW)
+ before=s.balances
+ r=s.execute("BNB-USDT","BUY",".1",META,QUOTE)
+ assert r.status=="REJECTED"
+ assert r.rejection_reason=="insufficient USDT balance including fee"
+ assert r.balances_before==before and r.balances_after==before and s.balances==before
+
+def test_future_quote_is_rejected_without_mutation():
+ future=BestBidAskQuote("kucoin","BNB-USDT",Decimal("600"),Decimal("1"),Decimal("601"),Decimal("1"),QuoteSource.REST,None,NOW+timedelta(seconds=1))
+ s=sim(); before=s.balances
+ r=s.execute("BNB-USDT","BUY",".1",META,future)
+ assert r.status=="REJECTED" and "future" in r.rejection_reason
+ assert r.balances_after==before and s.balances==before
+
+def test_wrong_metadata_exchange_is_rejected():
+ wrong=SymbolMetadata(**{**META.__dict__,"exchange":"other"})
+ r=sim().execute("BNB-USDT","BUY",".1",wrong,QUOTE)
+ assert r.status=="REJECTED" and "KuCoin BNB-USDT" in r.rejection_reason
