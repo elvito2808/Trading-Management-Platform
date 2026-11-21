@@ -5,18 +5,19 @@ KuCoin code was changed, and adding another DEX needs no KuCoin change.
 
 | Module | Role |
 |---|---|
-| `abi.py` | selectors (keccak256), EIP-55, ABI encode/decode. No `float`. |
-| `rpc.py` | JSON-RPC client. **Allow-list of read-only methods**; `eth_send*`, `eth_sign*`, `personal_*`, ... are rejected before any I/O. URL credentials redacted. Bounded retry. |
-| `bsc.py` | `BscAdapter`: chain-id verification (56), health, blocks, token info, `eth_call`, gas price. |
+| `abi.py` | Named canonical ABI signature inventory, selectors (keccak256), EIP-55, ABI encode/decode. No `float`. |
+| `rpc.py` | JSON-RPC client and bounded endpoint failover. **Allow-list of read-only methods**; `eth_send*`, `eth_sign*`, `personal_*`, ... are rejected before any I/O. URL credentials redacted. |
+| `bsc.py` | `BscAdapter`: chain-id verification (56), health, blocks, token metadata, ERC-20 balance/allowance reads, `eth_call`, gas price. |
 | `registry.py` | Contract registry: name, version, address, network, source, verification status, runtime checks. |
 | `pancakeswap_v2.py` | Pair discovery/validation, reserves, exact V2 math (0.25% fee), price impact, Router cross-check. |
 | `pancakeswap_v3.py` | Enabled fee tiers (probed on-chain), pool discovery/validation, **QuoterV2 quotes**, price impact. |
-| `gas.py` | Real `eth_gasPrice`; node `eth_estimateGas` on a realistic call (V2 BNB->USDT) or the V3 quoter's partial hint; else `UNKNOWN`. |
+| `gas.py` | Real `eth_gasPrice`; node `eth_estimateGas` on a realistic call (V2 BNB->USDT) or the V3 quoter's partial hint; else `UNKNOWN`. Pure V2/V3 calldata builders are inspection-only. |
 | `dry_run.py` | Fixed **0.1 BNB**, both directions, V2 vs V3 selection, net figure, `NonSendablePlan`, JSON report. |
 
 ## Use
 ```bash
 export BSC_RPC_URL=<any BSC RPC; public or your own node>      # required, no default, nothing paid is assumed
+export BSC_RPC_URLS=<comma-separated free BSC Mainnet endpoints> # optional bounded failover
 export BSC_GAS_SIMULATION_FROM=<PUBLIC address holding >=0.1 BNB>   # optional; only the `from` of a local eth_estimateGas
 python -m trading_platform.dex            # prints the dry-run report as JSON
 python -m unittest discover -s tests -p "test_dex_*.py"     # mock/unit (live tests skip)
@@ -30,6 +31,7 @@ Direction A = sell exactly 0.1 BNB for USDT (`EXACT_IN`). Direction B = buy exac
 * A quote is usable only if `validity == VALID`. Stale block, V2 Router mismatch, registry mismatch (e.g. `router.WETH()` != registry WBNB) make it `STALE`/`INVALID`.
 * Gas: `ESTIMATED_NODE` (real call simulated), `PARTIAL_POOL_ONLY` (V3 quoter pool-level number; **incomplete**, so no net figure and no `READY` status), `UNKNOWN` (no number, no cost, no net figure). Gas is converted to USDT with the selected pool's pre-trade mid price (recorded) and rounded up. It is an estimate, never a payment.
 * Everything is pinned to one block; every datum carries source, fetch time, block and validity.
+* Live validation uses BSC Mainnet only. Endpoint failover is bounded and records the endpoint/method infrastructure error; it does not convert chain-ID success into quote readiness.
 * Direction B on V2 and every V3 path cannot be node-simulated without an allowance, so those rely on the quoter hint or stay `UNKNOWN`.
 
 ## Safety guarantees (and how they are tested)

@@ -2,14 +2,56 @@
 
 ## Current Closeout
 
-**Authoritative current HEAD:** `ad75b0ff9433d3a22b651f686b5d123899377c6e` on `feature/phase-2-bsc-pancakeswap-integration`.
+**Authoritative validation implementation commit:** `8a9e28c9d416d686a5be77b177e2bb7672040639` (the final documentation closeout commit is the branch tip reported with delivery).
 **PR #6:** Open, Draft, and Unmerged. `main` and PR #5 were not modified.
 **Canonical status:** Phase 0 `ACCEPTED`; Phase 1 `ACCEPTED WITH DEFERRED VALIDATION ITEMS`; Phase 2 `PARTIALLY COMPLETED`; Phases 3–7 `NOT STARTED`.
 **Historical references:** previous alignment HEAD `24842491e1cf6a55a5a4bb6c8a5ebdf73e36b80f`; closeout predecessor `84fb93aa95ceb2f63325bcededcdb5705935ea95`; gas-semantics correction commit `58932bd5c3b49352ed4646f36df88978c36ce908`.
-**Evidence status:** Agent-reported focused suite 55 passed/7 skipped and full suite 146 passed/7 skipped; no CI checks were reported. Live RPC quote and complete dry-run validation remain blocked. This closeout alignment is documentation-only and is not independent test verification.
+**Evidence status:** Independent bounded validation in this closeout reached BSC Mainnet through `https://bsc.publicnode.com`; all seven live tests passed with a 180-second freshness bound. Gas remained `PARTIAL_POOL_ONLY`, so final/net profitability was withheld. Phase 2 remains `PARTIALLY COMPLETED` pending ALPHA acceptance of complete transaction-gas validation.
 
-**Final status:** `PARTIALLY COMPLETED - LIVE VALIDATION BLOCKED` (read-only implementation delivered; complete live quote/dry-run evidence remains unavailable)
-Date: 2026-11-20 | Mode: READ-ONLY / DRY-RUN | Network: BSC Mainnet (chain 56)
+**Final status:** `PARTIALLY COMPLETED - LIVE QUOTES AND DRY-RUN VERIFIED; COMPLETE TRANSACTION GAS UNAVAILABLE`
+Date: 2026-11-21 | Mode: READ-ONLY / DRY-RUN | Network: BSC Mainnet (chain 56)
+
+## Current Phase 2 completion addendum (2026-11-21)
+
+This section is the current validation record. Earlier sections retain historical results and are not rewritten.
+
+### Registry and ABI audit
+
+The registry addresses are unchanged and were checked with `eth_getCode` on Mainnet where the live suite reached them. The runtime identity checks passed for USDT metadata, V2 Router `factory()`/`WETH()`, V3 QuoterV2 `factory()`, dynamically discovered V2 pair, and dynamically discovered V3 pools. The exact deployed PancakeSwap ABI evidence remains the official PancakeSwap V3 source recorded below: QuoterV2 single-hop input/output uses the five-word tuple and returns four values; `slot0()` uses seven words with signed `int24 tick` and final `bool unlocked`. The implementation decodes `sqrtPriceX96After`, `initializedTicksCrossed`, `gasEstimate`, and `slot0` fields in that order. A centralized signature inventory now covers ERC-20 metadata/balance/allowance, V2 discovery/quotes/calldata, V3 discovery/QuoterV2, and local-only V3 SwapRouter calldata construction.
+
+### Bounded endpoint preflight
+
+At approximately 2026-11-21T00:59Z UTC, one bounded POST per method (`eth_chainId`, `eth_blockNumber`, 4-second timeout, no retry) was made to these free BSC Mainnet endpoints:
+
+| Endpoint | Chain ID | Block result | Approx. elapsed | Result |
+|---|---:|---|---:|---|
+| `https://bsc-dataseed2.binance.org` | `0x38` (56) | `0x808d098` | 6720 ms | both methods returned |
+| `https://bsc-dataseed3.binance.org` | `0x38` (56) | `0x808d09d` | 1982 ms | both methods returned |
+| `https://bsc-dataseed4.binance.org` | `0x38` (56) | `0x808d0ac` | 6821 ms | both methods returned |
+| `https://bsc-dataseed1.ninicoin.io` | `0x38` (56) | `0x808d0b2` | 2638 ms | both methods returned |
+| `https://bsc.publicnode.com` | `0x38` (56) | `0x808d0b7` | 2156 ms | both methods returned; selected for suite |
+
+The validation suite used `https://bsc.publicnode.com`, `BSC_RPC_TIMEOUT_SECONDS=5`, `BSC_RPC_MAX_RETRIES=0`, and then `BSC_MAX_BLOCK_AGE_SECONDS=180` solely to accommodate the endpoint's sequential read latency. The live snapshot was block `134796126`, timestamp `2026-11-21T01:05:14Z`.
+
+### Exact live results
+
+Command: `$env:RUN_LIVE_BSC_TESTS='1'; $env:BSC_RPC_URL='https://bsc.publicnode.com'; $env:BSC_RPC_TIMEOUT_SECONDS='5'; $env:BSC_RPC_MAX_RETRIES='0'; $env:BSC_MAX_BLOCK_AGE_SECONDS='180'; python -m unittest discover -s tests -p "test_dex_live_rpc.py" -v`
+
+Result: **7 passed, 0 failed, 0 errors** in 187.524 seconds.
+
+- Chain 56 and health: passed.
+- USDT: `USDT`, `Tether USD`, 18 decimals; code present: passed.
+- V2: Factory/Router code and identity checks passed; dynamically discovered pair `0x16b9a82891338f9bA80E2D6970FddA79D1eb0daE`; 0.1 BNB exact-input and exact-output quotes passed; Router cross-checks were `MATCH`; observed local fee `0.25%`.
+- V3: Factory/QuoterV2 code and identity checks passed; enabled tiers `(100, 500, 2500, 10000)` ppm; dynamically discovered pools included `0x172fcD41E0913e95784454622d1c3724f546f849` (100 ppm), `0x36696169C63e42cd08ce11f5deeBbCeBae652050` (500 ppm), `0x1401ff943D08a7e098328C1d3a9d388923B115D2` (2500 ppm), and `0x6805E0E5333c5c3acCF2930Be4734E2b98f4Ce06` (10000 ppm). QuoterV2 exact-input and exact-output succeeded in both directions and returned all four values.
+- Full Dry-Run: passed in both directions, remained non-sendable, and emitted no transaction.
+
+Representative selected quotes at the pinned block were V3 100 ppm: sell 0.1 WBNB -> `53.959547329333241127 USDT`; buy exactly 0.1 WBNB -> `53.970476482221386392 USDT` required. V2 Router cross-checks matched the reserve formula. Exact quote values are intentionally block-specific and are not final profitability claims.
+
+### Gas and safety closeout
+
+The live dry-run reported `PARTIAL_POOL_ONLY` from QuoterV2 (`92,211`/`92,136` units in the selected directions) and explicitly withheld `net_output`; this is not complete Router transaction gas and cannot produce `READY` or a final net price. `ESTIMATED_NODE` remains reserved for `eth_estimateGas` on a realistic router call with a public simulation sender. `UNKNOWN` produces no fabricated units, cost, or net result. No sender, allowance, approval, key, signature, broadcast, transfer, withdrawal, or swap was used.
+
+The implementation commit is `8a9e28c9d416d686a5be77b177e2bb7672040639`; it adds the documented ABI inventory, bounded RPC failover, ERC-20 balance/allowance reads, pure V2/V3 calldata builders, and focused regression coverage. Phase 2 remains `PARTIALLY COMPLETED` because complete transaction-gas estimates and final net prices were not available.
 
 ## 1. Summary
 A new package `trading_platform/dex/` provides a BSC adapter, independent PancakeSwap V2 and V3 modules, gas
