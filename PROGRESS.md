@@ -3,7 +3,7 @@
 **Repository:** https://github.com/elvito2808/Trading-Management-Platform
 **Default branch:** `main`
 **Current implementation branch:** `feature/phase-1-kucoin-integration`
-**Current submitted HEAD at last recorded snapshot:** `5f9a9b9613efe9927f05f13cc3d37533a0ed0410` (superseded; use the PR head SHA as current).
+**Current submitted HEAD:** see live [PR #5](https://github.com/elvito2808/Trading-Management-Platform/pull/5) head SHA; use that as authoritative.
 **Previous submitted implementation HEAD (historical):** `b098b231c9ab3f6d35201a5a91828c3d5632d3ca`
 **Current phase:** Phase 1 — KuCoin Integration
 **Current status:** `PENDING_ALPHA_REVIEW`
