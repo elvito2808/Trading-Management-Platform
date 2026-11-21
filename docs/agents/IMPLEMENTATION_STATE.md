@@ -74,3 +74,8 @@ Record decisions here or link ADRs. Do not let agents independently invent overl
 - Documentation, README/roadmap, and this ledger updated in the implementation PR.
 - Agent 6 independent review and owner approval before merge where appropriate.
 - PR body cites exact test commands/results and CI run URLs.
+
+
+## Phase 1 Dry-Run simulator continuation — 2026-11-21
+
+A local-only `KuCoinBNBUSDTDryRunSimulator` was added under `trading_platform/execution/kucoin_dry_run.py` with isolated tests and documentation. It uses default BNB=5 / USDT=4000, BUY at Ask, SELL at Bid, and a fixed 0.1% USDT fee solely as a simulator accounting assumption. Actual KuCoin fee-currency settlement is not asserted. No live endpoint or account-changing functionality was added. Awaiting test execution and ALPHA independent review.
