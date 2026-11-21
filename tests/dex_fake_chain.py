@@ -57,6 +57,7 @@ class FakeChain:
         self.methods_called: list[str] = []
         self.gas_price_wei: Optional[int] = 3 * 10 ** 9
         self.estimate_gas_result: Optional[int] = None          # None => eth_estimateGas reverts
+        self.estimate_gas_calls: list[dict[str, Any]] = []      # captured eth_estimateGas call objects
         # tokens
         self.usdt_symbol = "USDT"
         self.has_code = {a.lower() for a in (WBNB, USDT, V2_FACTORY, V2_ROUTER, V3_FACTORY, V3_QUOTER, V2_PAIR,
@@ -110,6 +111,9 @@ class FakeChain:
                 raise RevertError("gas price unavailable")
             return hex(self.gas_price_wei)
         if method == "eth_estimateGas":
+            if not params or not isinstance(params[0], dict):
+                raise RevertError("invalid eth_estimateGas call object")
+            self.estimate_gas_calls.append(dict(params[0]))
             if self.estimate_gas_result is None:
                 raise RevertError("insufficient allowance / balance")
             return hex(self.estimate_gas_result)
