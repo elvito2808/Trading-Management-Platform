@@ -483,6 +483,19 @@ Previously reported baseline results (55 focused KuCoin / 98 full-suite passed o
 - The simulator does not call any live order endpoint. No order, cancel, signing, broadcast, transfer, withdrawal, or other real action occurred.
 - Full-fill at a single Level 1 Ask/Bid is an approximation; depth, partial fills, queue position, latency, market impact and slippage are not modeled.
 - Actual fee-currency behavior is not validated. Live quote/private-balance connectivity remains deferred to credential-backed owner testing.
-- Phase 1 remains pending ALPHA review. Phase 2 has not been independently accepted; no Live Trading implementation was started.
+- Phase 1 remains pending ALPHA review. Comment 7053740543 does not set a Phase 2 prerequisite or grant future Live Trading authorization. No Live Trading implementation was started.
 
-**Commit:** This report was committed on the feature branch; the exact final branch HEAD is recorded in the accompanying agent completion message and GitHub PR #5. No main-branch update, merge, or force-push was performed.
+**Commit:** This report was committed on the feature branch; verify the current branch HEAD through PR #5. No main-branch update, merge, or force-push was performed.
+
+
+## Correction after reviewing original ALPHA directive 7053740543 — 2026-11-21
+
+The original directive at https://github.com/elvito2808/Trading-Management-Platform/pull/5#issuecomment-7053740543 is the controlling acceptance scope. It asks for: fixed 0.1% trading-fee arithmetic (not gas); deterministic local BUY/SELL using BNB=5 and USDT=4000; Ask for BUY, Bid for SELL; USDT quote-currency accounting as a simulator assumption; validation, no-mutation rejection, reset, structured results, tests and documentation; unchanged REST/WebSocket price retrieval and private-balance retrieval; no live order/API credentials/signing/broadcast; no merge or main changes.
+
+The prior insufficient-balance test setup was defective: the test quantities were larger than the fixture's displayed top-of-book size, so the simulator rejected them before reaching the intended balance check. The fixture's displayed size was increased and explicit tests were added for (a) BUY where gross fits the USDT balance but gross plus fee does not, (b) future quote rejection, and (c) mismatched metadata exchange rejection. The simulator test module now has 24 test cases. **These tests have not been executed in this agent session.** The historical 55 focused / 98 full-suite passes predate this simulator and are not valid acceptance evidence for it. No test pass count is claimed for this change.
+
+The mistakenly forwarded comment 7053862674 contained additional language about Phase 2 acceptance as a prerequisite and conditional future Live Trading authorization. Those statements are not in original directive 7053740543 and are not recorded as scope or authorization arising from it. No Live Trading code or action was performed.
+
+The controlling directive's sample arithmetic remains: at illustrative Ask=601 / Bid=600, BUY 0.1 has gross 60.1, fee 0.0601, USDT debit 60.1601, effective price 601.601, final balances BNB=5.1 / USDT=3939.8399; SELL 0.1 has gross 60.0, fee 0.0600, net USDT credit 59.9400, effective price 599.400, final balances BNB=4.9 / USDT=4059.9400. Each starts independently from BNB=5 / USDT=4000.
+
+No price-retrieval or private-balance code was changed. No live order endpoint, real order, cancel, signing, broadcast, transfer, withdrawal or other financial action occurred. PR #5 remains Draft/Open/Unmerged, main untouched, Phase 1 PENDING_ALPHA_REVIEW.
