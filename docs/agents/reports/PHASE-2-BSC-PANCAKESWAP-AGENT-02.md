@@ -11,6 +11,10 @@
 **Final status:** `PARTIALLY COMPLETED - LIVE QUOTES AND DRY-RUN VERIFIED; COMPLETE TRANSACTION GAS UNAVAILABLE`
 Date: 2026-11-21 | Mode: READ-ONLY / DRY-RUN | Network: BSC Mainnet (chain 56)
 
+### Final Phase 1 base alignment (2026-11-21)
+
+The primary and supplementary instructions in comments `7053741167` and `7053863120` were reread. The supplementary Live Trading authorization remains conditional on independent ALPHA acceptance and does not authorize implementation or real execution here. PR #6's prior base was `aa7d65d281647596c43e4417020f5ae91687606b`; the requested current Phase 1 head is `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d`. A normal merge is being made from that head into Phase 2; no rebase, reset, force-push, PR merge, main change, signing, broadcast, or financial action is authorized.
+
 ### ALPHA comment and branch-alignment closeout
 
 Comments `7053741167` (primary Phase 2 scope) and `7053863120` (supplementary scope and conditional future Live Trading authorization) were read and incorporated. The latter does not authorize Live Trading implementation or any real execution in this task. PR #6 previously recorded base SHA `316829506217cb817c69f04af5eaa9614a29feff`; the current Phase 1 base branch was `aa7d65d281647596c43e4417020f5ae91687606b`. GitHub's prior `dirty` state was reproduced as content conflicts in `PROGRESS.md`, `docs/PROJECT_STATUS.md`, and `docs/agents/IMPLEMENTATION_STATE.md`. They were resolved with a standard non-rewriting merge commit `a54dfe94e55a5f44960929a202348ec0669a4faa`; Phase 1 simulator/runtime changes were retained. No main or PR #5 changes were made.

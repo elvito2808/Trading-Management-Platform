@@ -6,13 +6,13 @@
 **Historical status at report creation (2026-11-19):** BLOCKED — implementation and verification not completed. This was an environment/access blocker and was later resolved; the historical account below is retained as history.
 **Date:** 2026-11-19
 
-### Current submitted state (2026-11-20)
+### Historical submitted state (2026-11-20)
 
 - Repository: `elvito2808/Trading-Management-Platform`.
 - Branch: `feature/phase-1-kucoin-integration`; use the live PR #5 head SHA as the current submitted commit (historical SHAs below are retained as history).
 - Previous submitted implementation HEAD `b098b231c9ab3f6d35201a5a91828c3d5632d3ca` is historical.
 - Phase 1 status: `PENDING_ALPHA_REVIEW`; PR #5 is Open, Draft, and Unmerged. `main` was not modified.
-- Test evidence is agent-reported, not independently rerun by ALPHA: focused tests **55 passed**; full suite **98 passed** on Python 3.10.11 using the plugin-disabled commands below. No combined status checks were reported for the latest reviewed commit; CI is not claimed as passed.
+- At this report snapshot, the 55 focused / 98 full-suite results were historical and pre-simulator. They do not represent current simulator verification.
 - Plain `python -m pytest -q tests/test_kucoin.py` fails during collection when global plugin autoload loads `web3.tools.pytest_ethereum`, which cannot import `ContractName` from `eth_typing`.
 
 ```powershell
@@ -24,7 +24,7 @@ $env:PYTEST_DISABLE_PLUGIN_AUTOLOAD = '1'; python -m pytest -q
 
 ## Executive summary
 
-The initial blocked attempt described in this report is historical. The current implementation and its verification are documented in the dated continuation sections near the end of this report. Current status remains `PENDING_ALPHA_REVIEW`; ALPHA acceptance has not occurred.
+The initial blocked attempt described in this report is historical. The current implementation and its verification are documented in the latest dated continuation section at the end of this report. Current status remains `PENDING_ALPHA_REVIEW`; ALPHA acceptance has not occurred.
 
 The repository was inspected through the GitHub integration. The authorized feature branch was created from the latest observed `main` head. Implementation was not started because the available execution environment could not clone the repository and has no working DNS/network access to GitHub. The GitHub file connector can inspect and mutate individual text files, but it cannot provide a local checkout, install dependencies, run pytest, or validate the complete package coherently. Making a production-oriented exchange adapter through isolated unexecuted file writes would not meet the assignment's safety and completion criteria.
 
@@ -499,3 +499,28 @@ The mistakenly forwarded comment 7053862674 contained additional language about 
 The controlling directive's sample arithmetic remains: at illustrative Ask=601 / Bid=600, BUY 0.1 has gross 60.1, fee 0.0601, USDT debit 60.1601, effective price 601.601, final balances BNB=5.1 / USDT=3939.8399; SELL 0.1 has gross 60.0, fee 0.0600, net USDT credit 59.9400, effective price 599.400, final balances BNB=4.9 / USDT=4059.9400. Each starts independently from BNB=5 / USDT=4000.
 
 No price-retrieval or private-balance code was changed. No live order endpoint, real order, cancel, signing, broadcast, transfer, withdrawal or other financial action occurred. PR #5 remains Draft/Open/Unmerged, main untouched, Phase 1 PENDING_ALPHA_REVIEW.
+
+
+## Current Phase 1 verification — 2026-11-21
+
+Both owner instructions were reviewed and applied: [comment 7053740543](https://github.com/elvito2808/Trading-Management-Platform/pull/5#issuecomment-7053740543) is the Phase 1 scope reference; [comment 7053862674](https://github.com/elvito2808/Trading-Management-Platform/pull/5#issuecomment-7053862674) is additionally observed. Its conditional permission does not allow Live Trading implementation now: Phase 1 and Phase 2 must first be independently accepted, and separate explicit owner approval remains required before any real order or asset movement.
+
+- PR #5 is Open, Draft and Unmerged. Its branch is `feature/phase-1-kucoin-integration`; head is `aa7d65d281647596c43e4417020f5ae91687606b`, matching the expected SHA. No PR status checks were reported.
+- Tests ran locally on Python 3.10.11 in an isolated worktree at that exact commit. No dependency installation or code correction was needed.
+
+```text
+PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest -q tests/test_kucoin_dry_run.py
+........................                                                 [100%]
+24 passed in 0.11s
+
+PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest -q
+........................................................................ [ 59%]
+..................................................                       [100%]
+122 passed in 1.69s
+```
+
+Test counts: focused — 24 passed, 0 failed, 0 skipped, 0 errors; full — 122 passed, 0 failed, 0 skipped, 0 errors. These are actual local agent-run results, not CI results or a claim of independent ALPHA acceptance.
+
+The simulator validation confirms 0.1% (`0.001`) is accounted for as a trading fee, not gas; BUY uses Ask and SELL uses Bid; simulator fees are accounted against USDT; and the insufficient-USDT test includes the fee. The simulator is local and does not send KuCoin orders. This task's simulator work did not modify market-price retrieval or private-balance retrieval. No real order, cancel, signature, broadcast, transfer, withdrawal or other asset action occurred.
+
+Limitations: no CI result, live price-feed validation, private inventory/credential validation, actual KuCoin fee-currency behavior, or live execution was validated. A single top-of-book full fill does not establish depth, partial fills, latency, market impact or slippage. Phase 1 remains `PENDING_ALPHA_REVIEW` pending independent review; Phase 2 acceptance is also required before any Live Trading implementation may begin.
