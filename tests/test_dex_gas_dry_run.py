@@ -121,11 +121,31 @@ class DryRunTests(unittest.TestCase):
         self.assertEqual(a.gas.status, GasStatus.ESTIMATED_NODE)
         self.assertEqual(a.status, "READY")
         self.assertTrue(a.v3_failures)
-        b = prep.prepare_direction(Direction.USDT_TO_BNB)   # no node simulation path for direction B on V2
-        self.assertEqual(b.gas.status, GasStatus.UNKNOWN)
-        self.assertEqual(b.status, "READY_GAS_UNKNOWN")
-        self.assertIsNone(b.net_output)
-        self.assertIn("withheld", b.net_basis)
+        b = prep.prepare_direction(Direction.USDT_TO_BNB)
+        self.assertEqual(b.selected.dex, "PancakeSwap V2")
+        self.assertEqual(b.gas.status, GasStatus.ESTIMATED_NODE)
+        self.assertEqual(b.status, "READY")
+        self.assertIsNotNone(b.net_output)
+
+        # Both directions must be estimated with the selected V2 Router calldata.
+        self.assertEqual(chain.methods_called.count("eth_estimateGas"), 2)
+        self.assertEqual(len(chain.estimate_gas_calls), 2)
+        reverse_call = chain.estimate_gas_calls[1]
+        self.assertEqual(abi.normalize_address(reverse_call["to"]), abi.normalize_address(V2_ROUTER))
+        self.assertEqual(abi.normalize_address(reverse_call["from"]), abi.normalize_address(SENDER))
+
+        data = abi.hex_to_bytes(reverse_call["data"])
+        expected_selector = abi.function_selector(
+            abi.ABI_SIGNATURES["v2_router_swap_tokens_for_exact_eth"]
+        )
+        self.assertEqual(data[:4], expected_selector)
+        self.assertEqual(abi.word_to_int(data[4:], 0), FIXED_BNB_AMOUNT_WEI)
+
+        path_offset = abi.word_to_int(data[4:], 2)
+        path_data = data[4 + path_offset:]
+        self.assertEqual(abi.word_to_int(path_data, 0), 2)
+        self.assertEqual(abi.word_to_address(path_data, 1), USDT)
+        self.assertEqual(abi.word_to_address(path_data, 2), WBNB)
 
     def test_no_usable_quote_is_not_ready(self):
         chain, bsc, prep = make()
