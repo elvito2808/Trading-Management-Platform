@@ -42,3 +42,8 @@ Identifiers are generated as UUIDs unless explicitly supplied. Use returned IDs 
 No live exchange/DEX connectivity, wallet signing, live RPC, blockchain transaction submission, live market data, strategies, bot execution, order execution, or real-money trading is implemented in Phase 2. These remain future work.
 
 See `docs/` for architecture, schema, CLI, readiness, decisions, and roadmap. `PROGRESS.md` records the verified repository state.
+
+
+## KuCoin local Dry-Run simulator
+
+The Phase 1 integration includes a separate local BNB/USDT simulator starting at BNB=5 / USDT=4000. It uses Ask for BUY and Bid for SELL and applies the fixed 0.1% fee using an explicit simulator-only USDT accounting assumption. It never submits an exchange order. See [KuCoin integration documentation](docs/KUCOIN_INTEGRATION.md) for validation, reset, fee-currency caveats and top-of-book/slippage limitations.
