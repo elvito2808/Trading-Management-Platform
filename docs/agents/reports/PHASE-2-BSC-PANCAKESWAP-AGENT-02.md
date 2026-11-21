@@ -2,8 +2,10 @@
 
 ## Current Closeout
 
-**Current PR #6 HEAD before this documentation correction:** `d66211e139b1df216ac00030091a14ced032978f`.
+**Current PR #6 HEAD:** `74d6f304bc0e0a5d159897068d7bdb159a0ac848`.
 **Current PR #6 base SHA:** `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d`.
+**PR #5 HEAD:** `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d`.
+**Historical previous PR #6 HEAD:** `d66211e139b1df216ac00030091a14ced032978f` (superseded by the current documentation state).
 **Historical alignment merge:** `3bdffb0921d29b4cdfcd6ca3cc2d3d7de1b3478d`.
 **PR #6:** Open, Draft, and Unmerged. `main` and PR #5 were not modified.
 **Canonical status:** Phase 0 `ACCEPTED`; Phase 1 `PENDING_ALPHA_REVIEW`; Phase 2 `PARTIALLY COMPLETED`; Phases 3–7 `NOT STARTED`.

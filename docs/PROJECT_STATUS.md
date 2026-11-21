@@ -1,13 +1,13 @@
 # Project Status — Trading Management Platform
 
 **Repository:** https://github.com/elvito2808/Trading-Management-Platform  
-**Status snapshot date:** 2026-11-20  
+**Status snapshot date:** 2026-11-21
 **Current implementation branch:** `feature/phase-2-bsc-pancakeswap-integration`
-**Current submitted HEAD before this documentation correction:** `d66211e139b1df216ac00030091a14ced032978f`; base `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d`.
+**Current PR #6 HEAD:** `74d6f304bc0e0a5d159897068d7bdb159a0ac848`; base and PR #5 HEAD `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d`.
 **Previous submitted implementation HEAD (historical):** `b098b231c9ab3f6d35201a5a91828c3d5632d3ca`
 **Current phase status:** `PARTIALLY COMPLETED`
 **PR #5:** Open, Draft, Unmerged; submitted head `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d`. `main` was not modified.
-**PR #6:** Open, Draft, Unmerged; head before this documentation correction `d66211e139b1df216ac00030091a14ced032978f`, base `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d`. `main` was not modified.
+**PR #6:** Open, Draft, Unmerged; current head `74d6f304bc0e0a5d159897068d7bdb159a0ac848`, base `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d`. The previous head `d66211e139b1df216ac00030091a14ced032978f` is historical and superseded. `main` was not modified.
 **Test evidence:** Agent-run Phase 2 focused 58 passed/7 skipped; full 173 passed/7 skipped. The latest successful Mainnet run was agent-run, 7 live tests passed through `https://bsc.publicnode.com`; this is not independent ALPHA verification. No CI checks were reported.
 **Authoritative baseline:** `main` at `6cb4d2d2d9e6ec00310c672cf822ee46db5e5c22`  
 **Status branch:** `feature/phase-2-bsc-pancakeswap-integration`
@@ -32,7 +32,7 @@ PR #6 is based on current Phase 1 head `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d
 |---|---|---|---|
 | Phase 0 | Repository audit and architecture | ACCEPTED | ALPHA's read-only audit; no code changes were part of that phase |
 | Phase 1 | KuCoin integration | PENDING_ALPHA_REVIEW | PR #5 remains Open, Draft, and Unmerged at submitted head `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d`; deferred items remain documented in the Agent 01 report. |
-| Phase 2 | Blockchain and DEX integration | PARTIALLY COMPLETED | [Draft PR #6](https://github.com/elvito2808/Trading-Management-Platform/pull/6) is Open, Draft, and Unmerged; current pre-correction head `d66211e139b1df216ac00030091a14ced032978f`, base `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d`; agent evidence records 58 passed/7 skipped focused and 173 passed/7 skipped full, plus a historical successful 7-test Mainnet run. Complete transaction gas remains unavailable. |
+| Phase 2 | Blockchain and DEX integration | PARTIALLY COMPLETED | [Draft PR #6](https://github.com/elvito2808/Trading-Management-Platform/pull/6) is Open, Draft, and Unmerged; current head `74d6f304bc0e0a5d159897068d7bdb159a0ac848`, base `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d`; the prior head `d66211e139b1df216ac00030091a14ced032978f` is historical. Agent evidence records 58 passed/7 skipped focused and 173 passed/7 skipped full, plus a historical successful 7-test Mainnet run. Complete transaction gas remains unavailable. |
 | Phase 3 | Arbitrage engine | NOT STARTED | Requires market-data and quote contracts |
 | Phase 4 | Multi-strategy management | NOT STARTED | Requires strategy lifecycle/runtime design |
 | Phase 5 | Risk management and recovery | NOT STARTED | Must precede any execution readiness |

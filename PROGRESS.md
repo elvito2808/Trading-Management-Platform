@@ -3,12 +3,12 @@
 **Repository:** https://github.com/elvito2808/Trading-Management-Platform
 **Default branch:** `main`
 **Current implementation branch:** `feature/phase-2-bsc-pancakeswap-integration`
-**Current submitted HEAD before this documentation correction:** `d66211e139b1df216ac00030091a14ced032978f`; base `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d`.
+**Current PR #6 HEAD:** `74d6f304bc0e0a5d159897068d7bdb159a0ac848`; base and PR #5 HEAD `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d`.
 **Previous submitted implementation HEAD (historical):** `b098b231c9ab3f6d35201a5a91828c3d5632d3ca`
 **Current phase:** Phase 2 — BNB Smart Chain + PancakeSwap V2/V3
 **Current status:** `PARTIALLY COMPLETED`
 **PR #5:** Open, Draft, Unmerged at `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d`. `main` was not modified.
-**PR #6:** Open, Draft, Unmerged; head before this documentation correction `d66211e139b1df216ac00030091a14ced032978f`, base `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d`. `main` was not modified.
+**PR #6:** Open, Draft, Unmerged; current head `74d6f304bc0e0a5d159897068d7bdb159a0ac848`, base `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d`. The previous head `d66211e139b1df216ac00030091a14ced032978f` is historical and superseded. `main` was not modified.
 
 **Current test evidence:** Agent-run Phase 2 focused suite **58 passed/7 skipped** and full suite **173 passed/7 skipped**; no CI checks were reported. The latest successful Mainnet run was agent-run: **7 live tests passed** through `https://bsc.publicnode.com`; this is not independent ALPHA verification. Complete transaction gas and final/net profitability remain unavailable.
 
