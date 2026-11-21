@@ -3,13 +3,13 @@
 **Repository:** https://github.com/elvito2808/Trading-Management-Platform
 **Default branch:** `main`
 **Current implementation branch:** `feature/phase-1-kucoin-integration`
-**Current submitted HEAD:** see live [PR #5](https://github.com/elvito2808/Trading-Management-Platform/pull/5) head SHA; use that as authoritative.
+**Current submitted HEAD:** `aa7d65d281647596c43e4417020f5ae91687606b` on `feature/phase-1-kucoin-integration`; confirmed against live [PR #5](https://github.com/elvito2808/Trading-Management-Platform/pull/5).
 **Previous submitted implementation HEAD (historical):** `b098b231c9ab3f6d35201a5a91828c3d5632d3ca`
 **Current phase:** Phase 1 — KuCoin Integration
 **Current status:** `PENDING_ALPHA_REVIEW`
 **PR #5:** Open, Draft, Unmerged. `main` was not modified.
 
-**Current test evidence:** The 55 focused / 98 full-suite results are pre-simulator baseline results only. The 24-case simulator test module and full suite have not been executed against the current simulator changes. No pass count or CI pass is claimed for the simulator.
+**Current test evidence (2026-11-21):** On Python 3.10.11 in an isolated worktree at the exact PR head, `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest -q tests/test_kucoin_dry_run.py` reported **24 passed** and `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest -q` reported **122 passed**. Both reported zero failed, skipped, or errors. These are local agent-run results, not a CI result or independent ALPHA acceptance. Phase 1 remains `PENDING_ALPHA_REVIEW`.
 
 ## Historical project snapshot — Phase 2 metadata and persistence
 
@@ -100,12 +100,12 @@ Detailed blocker, inspected architecture, exact clone error, and next-agent requ
 
 ### Agent 01 continuation — fixed fee and WebSocket-first Best Bid/Ask (2026-11-20)
 
-**Status: PENDING_ALPHA_REVIEW.** The current submitted HEAD is `5f9a9b9613efe9927f05f13cc3d37533a0ed0410`; the previous submitted implementation HEAD `b098b231c9ab3f6d35201a5a91828c3d5632d3ca` is historical. Work is on `feature/phase-1-kucoin-integration` and [PR #5](https://github.com/elvito2808/Trading-Management-Platform/pull/5), which remains Open, Draft, and Unmerged; ALPHA acceptance has not occurred.
+**Historical status at this 2026-11-20 snapshot: PENDING_ALPHA_REVIEW.** Submitted HEAD at that time was `5f9a9b9613efe9927f05f13cc3d37533a0ed0410`; it was later superseded. Current branch and head are recorded at the top of this file. PR #5 remains Open, Draft, and Unmerged; ALPHA acceptance has not occurred.
 
 - Fee estimation now uses the central fixed `Decimal("0.001")` assumption; there is no pair-fee or basic-fee request.
 - KuCoin market data uses one public Classic Spot/Margin WebSocket connection for configured symbols, with Level 1 Best Bid/Ask REST fallback only. No full order book is retrieved or retained.
 - Fixed per-symbol quantity is supplied explicitly by the caller; no quantity is invented, rounded, or balance-sized.
-- Python 3.10.11: focused KuCoin suite **55 passed**; complete suite **98 passed**. Both successful runs disabled pytest plugin autoload because the global `web3.tools.pytest_ethereum` plugin fails to import `eth_typing.ContractName`. Exact commands and limitations are in the [Agent 01 report](docs/agents/reports/PHASE-1-KUCOIN-AGENT-01.md).
+- Historical pre-simulator baseline on Python 3.10.11: focused KuCoin suite **55 passed**; complete suite **98 passed**. These results do not validate the simulator; see the current test evidence at the top of this file and in the latest [Agent 01 report](docs/agents/reports/PHASE-1-KUCOIN-AGENT-01.md).
 - No live KuCoin connection or real credentials were used, and no order/account-changing functionality was added.
 
 The original Phase 1 blocker records above are historical and remain preserved. See the [current project status](docs/PROJECT_STATUS.md), [implementation ledger](docs/agents/IMPLEMENTATION_STATE.md), and [continuation report](docs/agents/reports/PHASE-1-KUCOIN-AGENT-01.md) for reconciled evidence.
@@ -120,9 +120,11 @@ The required branch was rechecked before updating: `feature/arbitrage-live-integ
 
 ## Phase 1 local simulator continuation — 2026-11-21
 
-A local-only BNB/USDT Dry-Run simulator was added on `feature/phase-1-kucoin-integration`: default BNB=5 / USDT=4000, Ask BUY / Bid SELL, fixed 0.1% USDT fee assumption, validation, structured results and reset. No live order endpoint is used. A test-fixture defect was corrected after review of original ALPHA task comment 7053740543: insufficient-balance tests now use displayed size large enough to reach balance validation. Added fee-inclusive BUY affordability, future-quote and metadata-exchange tests. The simulator module has 24 cases, but neither it nor the full suite has been executed against these changes. The prior 55/98 pass counts are pre-simulator baseline only. ALPHA independent review remains pending.
+A local-only BNB/USDT Dry-Run simulator was added on `feature/phase-1-kucoin-integration`: default BNB=5 / USDT=4000, Ask BUY / Bid SELL, fixed 0.1% USDT fee assumption, validation, structured results and reset. No live order endpoint is used. A test-fixture defect was corrected after review of original ALPHA task comment 7053740543: insufficient-balance tests now use displayed size large enough to reach balance validation. Added fee-inclusive BUY affordability, future-quote and metadata-exchange tests.
+
+**Validation on 2026-11-21:** Exact PR head `aa7d65d281647596c43e4417020f5ae91687606b`, Python 3.10.11, isolated worktree. Focused command: `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest -q tests/test_kucoin_dry_run.py` — `24 passed in 0.11s` (0 failed, 0 skipped, 0 errors). Full command: `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest -q` — `122 passed in 1.69s` (0 failed, 0 skipped, 0 errors). The commands passed; no CI result is claimed and independent ALPHA acceptance remains pending.
 
 
 ## Original ALPHA task directive reconciliation — 2026-11-21
 
-Controlling directive: [PR #5 comment 7053740543](https://github.com/elvito2808/Trading-Management-Platform/pull/5#issuecomment-7053740543). It requests Phase 1 fee accounting and local BUY/SELL simulation, with market data/private balance code left unchanged. The separate Phase 2 gating and conditional Live Trading authorization text in comment 7053862674 is not part of comment 7053740543 and is not treated as authorization here. No Live Trading implementation or real action occurred.
+Controlling Phase 1 scope: [PR #5 comment 7053740543](https://github.com/elvito2808/Trading-Management-Platform/pull/5#issuecomment-7053740543). The supplementary instruction, [comment 7053862674](https://github.com/elvito2808/Trading-Management-Platform/pull/5#issuecomment-7053862674), is also observed: it forbids Live Trading implementation in this task and makes any future implementation conditional on independent acceptance of both Phase 1 and Phase 2. Separate explicit owner approval is required before any real order or asset movement. No Live Trading implementation or real action occurred.
