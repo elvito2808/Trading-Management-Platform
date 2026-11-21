@@ -71,3 +71,25 @@ Dry-run validation covers finite positive quantity and reference price, base inc
 - There are no preconfigured per-symbol trade quantities; a caller must supply them.
 - `quoteMinSize` is exposed in symbol metadata but is not treated as a base-quantity or quote-notional threshold. `minFunds` is the documented quote-value minimum enforced by dry-run validation.
 - This is a market-data and local dry-run integration only, not a trading system.
+
+
+## Local BNB/USDT execution simulator
+
+`trading_platform.execution.kucoin_dry_run.KuCoinBNBUSDTDryRunSimulator` is a stateful, local-only simulator, separate from `KuCoinClient`. It has no network transport, credentials, or order endpoint. Defaults are BNB=5 and USDT=4000; starting balances can be configured and `reset()` restores them.
+
+It accepts only BNB-USDT BUY/SELL requests with matching enabled symbol metadata, finite positive quantity aligned to `baseIncrement` and within base size limits, and a fresh valid KuCoin Best Bid/Ask quote. It enforces `minFunds` when supplied and rejects quantities exceeding displayed top-of-book size. BUY uses Ask; SELL uses Bid. Rejections leave balances unchanged and return a structured `REJECTED` result and reason. Successful local fills return `FILLED`, before/after balances, gross notional, fee rate/amount/currency, debit/credit and effective unit price.
+
+### Simulator fee accounting — explicit assumption
+
+The fixed fee assumption is exactly 0.1% (`Decimal("0.001")`) on both sides. For deterministic local accounting only, the simulator treats fees as quote-currency USDT:
+
+- BUY: gross = quantity × Ask; fee = gross × 0.001 USDT; USDT debit = gross + fee; BNB credit = quantity; effective price = debit ÷ quantity.
+- SELL: gross = quantity × Bid; fee = gross × 0.001 USDT; USDT credit = gross − fee; BNB debit = quantity; effective price = net credit ÷ quantity.
+
+This does **not** assert KuCoin will deduct actual fees in USDT. Actual fee currency/settlement depends on account settings, discounts and execution response. The simulator does not query actual fee rates or fee currency. This is a trading-fee estimate, not blockchain gas.
+
+### Example
+
+For Ask=601 USDT and Bid=600 USDT, a 0.1 BNB BUY produces gross 60.1 USDT, fee 0.0601 USDT, debit 60.1601 USDT, and balances BNB=5.1 / USDT=3939.8399. A separate 0.1 BNB SELL produces gross 60.0 USDT, fee 0.0600 USDT, net credit 59.9400 USDT, and balances BNB=4.9 / USDT=4059.9400. Each example starts from the defaults.
+
+This is a full-fill simulation at one Level 1 price. It does not model queue position, partial fills, latency, market impact, deeper liquidity, or slippage; actual execution may differ or fail.

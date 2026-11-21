@@ -3,15 +3,19 @@
 **Repository:** https://github.com/elvito2808/Trading-Management-Platform  
 **Status snapshot date:** 2026-11-20  
 **Current implementation branch:** `feature/phase-2-bsc-pancakeswap-integration`
-**Current submitted HEAD:** `ad75b0ff9433d3a22b651f686b5d123899377c6e`
+**Current submitted HEAD:** alignment merge in progress; pre-merge Phase 2 head `90d20b263cb997e9bc10816e57577787a1c54404`.
 **Previous submitted implementation HEAD (historical):** `b098b231c9ab3f6d35201a5a91828c3d5632d3ca`
 **Current phase status:** `PARTIALLY COMPLETED`
 **PR #5:** Open, Draft, Unmerged; submitted head `316829506217cb817c69f04af5eaa9614a29feff`. `main` was not modified.
-**PR #6:** Open, Draft, Unmerged; submitted head `ad75b0ff9433d3a22b651f686b5d123899377c6e`. `main` was not modified.
+**PR #6:** Open, Draft, Unmerged; pre-merge head `90d20b263cb997e9bc10816e57577787a1c54404`. `main` was not modified.
 **Test evidence:** Agent-reported Phase 2 results, not independently rerun in this documentation reconciliation: focused 55 passed/7 skipped; full 146 passed/7 skipped. No CI checks were reported; CI is not claimed as passed.
 **Authoritative baseline:** `main` at `6cb4d2d2d9e6ec00310c672cf822ee46db5e5c22`  
 **Status branch:** `feature/phase-2-bsc-pancakeswap-integration`
 **Overall project status:** PARTIALLY COMPLETED
+
+## Current branch alignment
+
+PR #6 was based on historical base SHA `316829506217cb817c69f04af5eaa9614a29feff`, while the current Phase 1 branch head was `aa7d65d281647596c43e4417020f5ae91687606b`. The resulting GitHub `dirty` mergeability was caused by documentation conflicts in `PROGRESS.md`, this file, and `docs/agents/IMPLEMENTATION_STATE.md`; no Phase 2 runtime conflict was identified. A standard non-rewriting merge is being recorded on the Phase 2 branch. The latest Phase 1 simulator changes are retained, and the conditional Live Trading authorization from comment `7053863120` remains future-only and inactive.
 
 ## 1. Current verified repository state
 

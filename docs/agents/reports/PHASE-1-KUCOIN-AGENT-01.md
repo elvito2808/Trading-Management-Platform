@@ -9,7 +9,7 @@
 ### Current submitted state (2026-11-20)
 
 - Repository: `elvito2808/Trading-Management-Platform`.
-- Branch and current submitted HEAD: `feature/phase-1-kucoin-integration` at `cd07970b32396fed478fcdc6d85fa641e4033d26`.
+- Branch: `feature/phase-1-kucoin-integration`; use the live PR #5 head SHA as the current submitted commit (historical SHAs below are retained as history).
 - Previous submitted implementation HEAD `b098b231c9ab3f6d35201a5a91828c3d5632d3ca` is historical.
 - Phase 1 status: `PENDING_ALPHA_REVIEW`; PR #5 is Open, Draft, and Unmerged. `main` was not modified.
 - Test evidence is agent-reported, not independently rerun by ALPHA: focused tests **55 passed**; full suite **98 passed** on Python 3.10.11 using the plugin-disabled commands below. No combined status checks were reported for the latest reviewed commit; CI is not claimed as passed.
@@ -433,3 +433,69 @@ This update records the previous documentation reconciliation. At that time, `b0
 - This task corrects current submitted HEAD references only; no implementation code or tests changed, and no tests were rerun.
 - Test results remain agent-reported: focused 55 passed and full suite 98 passed. ALPHA has not independently rerun them.
 - PR #5 remains Open, Draft, and Unmerged. `main` was not modified. ALPHA acceptance has not occurred; status remains `PENDING_ALPHA_REVIEW`.
+
+
+## Local BNB/USDT simulator continuation — 2026-11-21
+
+Added a local-only simulator at `trading_platform/execution/kucoin_dry_run.py` and focused tests at `tests/test_kucoin_dry_run.py`. Defaults are BNB=5 / USDT=4000; BUY uses Ask and SELL uses Bid; fee rate is fixed at 0.001 and accounted in USDT solely as a deterministic simulator assumption. Actual KuCoin fee currency is not asserted. Simulator rejects invalid symbol/side/quantity/metadata/quote, stale quotes, quantities exceeding displayed top-of-book size, minimum-funds violations and insufficient balances without mutating state; reset restores configured starting balances. Documentation now describes example arithmetic and slippage/depth limitations.
+
+No live order endpoint, live account action, signing, broadcast, transfer or withdrawal was invoked. Price retrieval and private-balance retrieval were not modified. Agent test execution and final commit SHA must be recorded after verification; ALPHA independent acceptance remains pending.
+
+
+## Phase 1 deterministic simulator delivery report — 2026-11-21
+
+**Branch:** `feature/phase-1-kucoin-integration`  
+**PR:** [#5](https://github.com/elvito2808/Trading-Management-Platform/pull/5) — Open, Draft, Unmerged.  
+**Implementation status:** Simulator and documentation committed; automated execution verification is **not run in this agent session**, so Phase 1 completion is submitted for ALPHA review, not claimed independently accepted.
+
+### Changed files in this continuation
+
+- `trading_platform/execution/kucoin_dry_run.py` — isolated local simulator; no exchange client/network dependency.
+- `tests/test_kucoin_dry_run.py` — fee arithmetic, reconciliation, balance rejection, invalid symbol/side/quantity/quote, top-of-book size, disabled symbol, minFunds, reset and configurable initial balances.
+- `docs/KUCOIN_INTEGRATION.md` — simulator API, fee-currency assumption, worked examples and limitations.
+- `README.md` — simulator scope pointer.
+- `docs/PROJECT_STATUS.md`, `docs/agents/IMPLEMENTATION_STATE.md`, `PROGRESS.md` — continuation status and handoff.
+- This report.
+
+### Simulator examples
+
+Illustrative quote only: Ask=601 USDT, Bid=600 USDT; each example independently starts at BNB=5 / USDT=4000.
+
+- BUY 0.1 BNB: gross 60.1 USDT; fee 0.0601 USDT; USDT debit 60.1601; BNB credit 0.1; effective unit price 601.601 USDT/BNB; after balances BNB=5.1 / USDT=3939.8399.
+- SELL 0.1 BNB: gross 60.0 USDT; fee 0.0600 USDT; USDT net credit 59.9400; BNB debit 0.1; effective unit price 599.400 USDT/BNB; after balances BNB=4.9 / USDT=4059.9400.
+
+Fee rate 0.001 is the owner-configured estimate. USDT fee currency is strictly a local simulator accounting assumption, not a claim about KuCoin's actual fee currency or settlement.
+
+### Verification
+
+The following commands are the intended local verification commands, but were **not executed in this session** because this agent environment has GitHub repository access only and no checked-out project runtime:
+
+```bash
+PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest -q tests/test_kucoin_dry_run.py
+PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest -q
+```
+
+Previously reported baseline results (55 focused KuCoin / 98 full-suite passed on Python 3.10.11) predate this simulator and must not be represented as tests of this continuation. GitHub Actions currently reports zero workflow runs; no CI pass is claimed. ALPHA has not independently run the new tests.
+
+### Boundaries and limitations
+
+- KuCoin BNB/USDT REST/WebSocket price retrieval and private-balance retrieval were left unchanged.
+- The simulator does not call any live order endpoint. No order, cancel, signing, broadcast, transfer, withdrawal, or other real action occurred.
+- Full-fill at a single Level 1 Ask/Bid is an approximation; depth, partial fills, queue position, latency, market impact and slippage are not modeled.
+- Actual fee-currency behavior is not validated. Live quote/private-balance connectivity remains deferred to credential-backed owner testing.
+- Phase 1 remains pending ALPHA review. Comment 7053740543 does not set a Phase 2 prerequisite or grant future Live Trading authorization. No Live Trading implementation was started.
+
+**Commit:** This report was committed on the feature branch; verify the current branch HEAD through PR #5. No main-branch update, merge, or force-push was performed.
+
+
+## Correction after reviewing original ALPHA directive 7053740543 — 2026-11-21
+
+The original directive at https://github.com/elvito2808/Trading-Management-Platform/pull/5#issuecomment-7053740543 is the controlling acceptance scope. It asks for: fixed 0.1% trading-fee arithmetic (not gas); deterministic local BUY/SELL using BNB=5 and USDT=4000; Ask for BUY, Bid for SELL; USDT quote-currency accounting as a simulator assumption; validation, no-mutation rejection, reset, structured results, tests and documentation; unchanged REST/WebSocket price retrieval and private-balance retrieval; no live order/API credentials/signing/broadcast; no merge or main changes.
+
+The prior insufficient-balance test setup was defective: the test quantities were larger than the fixture's displayed top-of-book size, so the simulator rejected them before reaching the intended balance check. The fixture's displayed size was increased and explicit tests were added for (a) BUY where gross fits the USDT balance but gross plus fee does not, (b) future quote rejection, and (c) mismatched metadata exchange rejection. The simulator test module now has 24 test cases. **These tests have not been executed in this agent session.** The historical 55 focused / 98 full-suite passes predate this simulator and are not valid acceptance evidence for it. No test pass count is claimed for this change.
+
+The mistakenly forwarded comment 7053862674 contained additional language about Phase 2 acceptance as a prerequisite and conditional future Live Trading authorization. Those statements are not in original directive 7053740543 and are not recorded as scope or authorization arising from it. No Live Trading code or action was performed.
+
+The controlling directive's sample arithmetic remains: at illustrative Ask=601 / Bid=600, BUY 0.1 has gross 60.1, fee 0.0601, USDT debit 60.1601, effective price 601.601, final balances BNB=5.1 / USDT=3939.8399; SELL 0.1 has gross 60.0, fee 0.0600, net USDT credit 59.9400, effective price 599.400, final balances BNB=4.9 / USDT=4059.9400. Each starts independently from BNB=5 / USDT=4000.
+
+No price-retrieval or private-balance code was changed. No live order endpoint, real order, cancel, signing, broadcast, transfer, withdrawal or other financial action occurred. PR #5 remains Draft/Open/Unmerged, main untouched, Phase 1 PENDING_ALPHA_REVIEW.
