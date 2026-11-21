@@ -1,8 +1,11 @@
 # AGENT 02 REPORT - PHASE-2-BSC-PANCAKESWAP-INTEGRATION
 
+**PR #6 live branch tip:** authoritative current SHA is available from the [PR #6 commit history](https://github.com/elvito2808/Trading-Management-Platform/pull/6/commits). This file records the latest implementation baseline before this documentation-only reconciliation; a Git commit cannot contain its own resulting SHA without creating another commit.
+**Gas / profitability boundary:** `PARTIAL_POOL_ONLY` is only a pool-level QuoterV2 hint and excludes complete Router, token-transfer, and intrinsic transaction gas; `UNKNOWN` has no defensible gas amount. No successful, complete `eth_estimateGas` result for a realistic full router transaction is available in the recorded validation. Therefore no final/net profit or final net price may be published from these states. Pool fees are already reflected in swap quotes and must not be double-counted; network gas is a separate cost.
+
 ## Current Closeout
 
-**Current PR #6 HEAD:** `74d6f304bc0e0a5d159897068d7bdb159a0ac848`.
+**Latest implementation baseline (PR #6 HEAD before this docs-only reconciliation):** `c046e39993f43456c1a3374247491f401b91f4cd`.
 **Current PR #6 base SHA:** `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d`.
 **PR #5 HEAD:** `fe6a1d2c6efe3db9ff7504f03a778b47d098fa8d`.
 **Historical previous PR #6 HEAD:** `d66211e139b1df216ac00030091a14ced032978f` (superseded by the current documentation state).
@@ -66,6 +69,15 @@ Representative selected quotes at the pinned block were V3 100 ppm: sell 0.1 WBN
 The live dry-run reported `PARTIAL_POOL_ONLY` from QuoterV2 (`92,211`/`92,136` units in the selected directions) and explicitly withheld `net_output`; this is not complete Router transaction gas and cannot produce `READY` or a final net price. `ESTIMATED_NODE` remains reserved for `eth_estimateGas` on a realistic router call with a public simulation sender. `UNKNOWN` produces no fabricated units, cost, or net result. No sender, allowance, approval, key, signature, broadcast, transfer, withdrawal, or swap was used.
 
 The implementation commit is `8a9e28c9d416d686a5be77b177e2bb7672040639`; it adds the documented ABI inventory, bounded RPC failover, ERC-20 balance/allowance reads, pure V2/V3 calldata builders, and focused regression coverage. Phase 2 remains `PARTIALLY COMPLETED` because complete transaction-gas estimates and final net prices were not available.
+
+## PR #6 commit chronology (GitHub parent links verified)
+
+1. `d66211e139b1df216ac00030091a14ced032978f` — earlier Phase 2 branch head; now historical.
+2. `74d6f304bc0e0a5d159897068d7bdb159a0ac848` — documentation-only reconciliation; parent is `d66211e...`; now historical.
+3. `c046e39993f43456c1a3374247491f401b91f4cd` — documentation-only reconciliation; parent is `74d6f304...`; latest implementation/documentation baseline before this consolidated reconciliation.
+4. This consolidated documentation-only reconciliation follows `c046e399...`; its resulting branch-tip SHA is recorded in GitHub PR #6 commit history rather than self-embedded in these files.
+
+All three predecessor commits are preserved; no rebase, reset, force-push, or history rewrite is used.
 
 ## 1. Summary
 A new package `trading_platform/dex/` provides a BSC adapter, independent PancakeSwap V2 and V3 modules, gas
