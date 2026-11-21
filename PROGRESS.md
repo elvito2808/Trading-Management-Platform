@@ -3,7 +3,7 @@
 **Repository:** https://github.com/elvito2808/Trading-Management-Platform
 **Default branch:** `main`
 **Current implementation branch:** `feature/phase-1-kucoin-integration`
-**Current submitted HEAD:** `cd07970b32396fed478fcdc6d85fa641e4033d26`
+**Current submitted HEAD:** `5f9a9b9613efe9927f05f13cc3d37533a0ed0410`
 **Previous submitted implementation HEAD (historical):** `b098b231c9ab3f6d35201a5a91828c3d5632d3ca`
 **Current phase:** Phase 1 — KuCoin Integration
 **Current status:** `PENDING_ALPHA_REVIEW`
@@ -100,7 +100,7 @@ Detailed blocker, inspected architecture, exact clone error, and next-agent requ
 
 ### Agent 01 continuation — fixed fee and WebSocket-first Best Bid/Ask (2026-11-20)
 
-**Status: PENDING_ALPHA_REVIEW.** The current submitted HEAD is `cd07970b32396fed478fcdc6d85fa641e4033d26`; the previous submitted implementation HEAD `b098b231c9ab3f6d35201a5a91828c3d5632d3ca` is historical. Work is on `feature/phase-1-kucoin-integration` and [PR #5](https://github.com/elvito2808/Trading-Management-Platform/pull/5), which remains Open, Draft, and Unmerged; ALPHA acceptance has not occurred.
+**Status: PENDING_ALPHA_REVIEW.** The current submitted HEAD is `5f9a9b9613efe9927f05f13cc3d37533a0ed0410`; the previous submitted implementation HEAD `b098b231c9ab3f6d35201a5a91828c3d5632d3ca` is historical. Work is on `feature/phase-1-kucoin-integration` and [PR #5](https://github.com/elvito2808/Trading-Management-Platform/pull/5), which remains Open, Draft, and Unmerged; ALPHA acceptance has not occurred.
 
 - Fee estimation now uses the central fixed `Decimal("0.001")` assumption; there is no pair-fee or basic-fee request.
 - KuCoin market data uses one public Classic Spot/Margin WebSocket connection for configured symbols, with Level 1 Best Bid/Ask REST fallback only. No full order book is retrieved or retained.
