@@ -11,6 +11,12 @@
 **Final status:** `PARTIALLY COMPLETED - LIVE QUOTES AND DRY-RUN VERIFIED; COMPLETE TRANSACTION GAS UNAVAILABLE`
 Date: 2026-11-21 | Mode: READ-ONLY / DRY-RUN | Network: BSC Mainnet (chain 56)
 
+### ALPHA comment and branch-alignment closeout
+
+Comments `7053741167` (primary Phase 2 scope) and `7053863120` (supplementary scope and conditional future Live Trading authorization) were read and incorporated. The latter does not authorize Live Trading implementation or any real execution in this task. PR #6 previously recorded base SHA `316829506217cb817c69f04af5eaa9614a29feff`; the current Phase 1 base branch was `aa7d65d281647596c43e4417020f5ae91687606b`. GitHub's prior `dirty` state was reproduced as content conflicts in `PROGRESS.md`, `docs/PROJECT_STATUS.md`, and `docs/agents/IMPLEMENTATION_STATE.md`. They were resolved with a standard non-rewriting merge commit `a54dfe94e55a5f44960929a202348ec0669a4faa`; Phase 1 simulator/runtime changes were retained. No main or PR #5 changes were made.
+
+Post-alignment results: Phase 2 focused command `python -m unittest discover -s tests -p "test_dex_*.py" -v` — **58 passed, 7 skipped, 0 failed**. Phase 1 simulator direct unittest discovery found **0 tests** because it is pytest-based; the full command `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest -q` — **173 passed, 7 skipped, 0 failed**. The seven skips are the opt-in live class when no endpoint is supplied. The earlier independent Mainnet run remains recorded above: **7 live tests passed** against `https://bsc.publicnode.com`; gas stayed `PARTIAL_POOL_ONLY`, so no net/final price was published.
+
 ## Current Phase 2 completion addendum (2026-11-21)
 
 This section is the current validation record. Earlier sections retain historical results and are not rewritten.

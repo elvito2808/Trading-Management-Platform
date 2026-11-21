@@ -3,10 +3,10 @@
 **Repository:** https://github.com/elvito2808/Trading-Management-Platform
 **Default branch:** `main`
 **Ledger owner:** Agent 0 (Orchestrator); every implementing agent must update it in its own PR.
-**Current submitted HEAD:** alignment merge in progress; pre-merge Phase 2 head `90d20b263cb997e9bc10816e57577787a1c54404` on `feature/phase-2-bsc-pancakeswap-integration`.
+**Current submitted HEAD:** alignment merge `a54dfe94e55a5f44960929a202348ec0669a4faa` on `feature/phase-2-bsc-pancakeswap-integration` (documentation closeout follows on the same branch).
 **Previous submitted implementation HEAD (historical):** `b098b231c9ab3f6d35201a5a91828c3d5632d3ca`.
 **Phase 1 status:** `ACCEPTED WITH DEFERRED VALIDATION ITEMS`; PR #5 is Open, Draft, and Unmerged at submitted head `316829506217cb817c69f04af5eaa9614a29feff`. `main` was not modified.
-**Phase 2 status:** `PARTIALLY COMPLETED`; PR #6 is Open, Draft, and Unmerged; pre-merge head `90d20b263cb997e9bc10816e57577787a1c54404`.
+**Phase 2 status:** `PARTIALLY COMPLETED`; PR #6 is Open, Draft, and Unmerged; alignment head `a54dfe94e55a5f44960929a202348ec0669a4faa`.
 **Current evidence:** Agent-reported Phase 2 focused suite 55 passed/7 skipped and full suite 146 passed/7 skipped; no CI checks were reported. This ledger update is documentation-only and is not independent test verification.
 **Last reviewed:** 2026-11-20 (submitted branch state; ALPHA acceptance has not occurred).
 
