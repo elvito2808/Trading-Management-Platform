@@ -3,13 +3,13 @@
 **Repository:** https://github.com/elvito2808/Trading-Management-Platform
 **Default branch:** `main`
 **Current implementation branch:** `feature/phase-1-kucoin-integration`
-**Current submitted HEAD:** `5f9a9b9613efe9927f05f13cc3d37533a0ed0410`
+**Current submitted HEAD at last recorded snapshot:** `5f9a9b9613efe9927f05f13cc3d37533a0ed0410` (superseded; use the PR head SHA as current).
 **Previous submitted implementation HEAD (historical):** `b098b231c9ab3f6d35201a5a91828c3d5632d3ca`
 **Current phase:** Phase 1 — KuCoin Integration
 **Current status:** `PENDING_ALPHA_REVIEW`
 **PR #5:** Open, Draft, Unmerged. `main` was not modified.
 
-**Current test evidence:** Agent-reported on Python 3.10.11; ALPHA has not independently rerun the tests. Focused KuCoin tests: **55 passed**; full suite: **98 passed**, using the plugin-disabled commands documented in the Agent 01 report. The latest reviewed commit had no reported combined status checks; no CI pass is claimed here.
+**Current test evidence:** The 55 focused / 98 full-suite results are pre-simulator baseline results only. The 24-case simulator test module and full suite have not been executed against the current simulator changes. No pass count or CI pass is claimed for the simulator.
 
 ## Historical project snapshot — Phase 2 metadata and persistence
 
@@ -120,4 +120,9 @@ The required branch was rechecked before updating: `feature/arbitrage-live-integ
 
 ## Phase 1 local simulator continuation — 2026-11-21
 
-A local-only BNB/USDT Dry-Run simulator was added on `feature/phase-1-kucoin-integration`: default BNB=5 / USDT=4000, Ask BUY / Bid SELL, fixed 0.1% USDT fee assumption, validation, structured results and reset. No live order endpoint is used. Agent test evidence and ALPHA independent review remain pending.
+A local-only BNB/USDT Dry-Run simulator was added on `feature/phase-1-kucoin-integration`: default BNB=5 / USDT=4000, Ask BUY / Bid SELL, fixed 0.1% USDT fee assumption, validation, structured results and reset. No live order endpoint is used. A test-fixture defect was corrected after review of original ALPHA task comment 7053740543: insufficient-balance tests now use displayed size large enough to reach balance validation. Added fee-inclusive BUY affordability, future-quote and metadata-exchange tests. The simulator module has 24 cases, but neither it nor the full suite has been executed against these changes. The prior 55/98 pass counts are pre-simulator baseline only. ALPHA independent review remains pending.
+
+
+## Original ALPHA task directive reconciliation — 2026-11-21
+
+Controlling directive: [PR #5 comment 7053740543](https://github.com/elvito2808/Trading-Management-Platform/pull/5#issuecomment-7053740543). It requests Phase 1 fee accounting and local BUY/SELL simulation, with market data/private balance code left unchanged. The separate Phase 2 gating and conditional Live Trading authorization text in comment 7053862674 is not part of comment 7053740543 and is not treated as authorization here. No Live Trading implementation or real action occurred.
