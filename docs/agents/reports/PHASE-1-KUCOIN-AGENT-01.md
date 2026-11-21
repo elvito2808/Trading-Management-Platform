@@ -2,10 +2,29 @@
 
 **Agent:** AGENT-01-KUCOIN  
 **Repository:** `elvito2808/Trading-Management-Platform`  
-**Status:** BLOCKED — implementation and verification not completed  
+**Current status:** `PENDING_ALPHA_REVIEW`
+**Historical status at report creation (2026-11-19):** BLOCKED — implementation and verification not completed. This was an environment/access blocker and was later resolved; the historical account below is retained as history.
 **Date:** 2026-11-19
 
+### Historical submitted state (2026-11-20)
+
+- Repository: `elvito2808/Trading-Management-Platform`.
+- Branch: `feature/phase-1-kucoin-integration`; use the live PR #5 head SHA as the current submitted commit (historical SHAs below are retained as history).
+- Previous submitted implementation HEAD `b098b231c9ab3f6d35201a5a91828c3d5632d3ca` is historical.
+- Phase 1 status: `PENDING_ALPHA_REVIEW`; PR #5 is Open, Draft, and Unmerged. `main` was not modified.
+- At this report snapshot, the 55 focused / 98 full-suite results were historical and pre-simulator. They do not represent current simulator verification.
+- Plain `python -m pytest -q tests/test_kucoin.py` fails during collection when global plugin autoload loads `web3.tools.pytest_ethereum`, which cannot import `ContractName` from `eth_typing`.
+
+```powershell
+$env:PYTEST_DISABLE_PLUGIN_AUTOLOAD = '1'; python -m pytest -q tests/test_kucoin.py
+# Agent-reported result: 55 passed
+$env:PYTEST_DISABLE_PLUGIN_AUTOLOAD = '1'; python -m pytest -q
+# Agent-reported result: 98 passed
+```
+
 ## Executive summary
+
+The initial blocked attempt described in this report is historical. The current implementation and its verification are documented in the latest dated continuation section at the end of this report. Current status remains `PENDING_ALPHA_REVIEW`; ALPHA acceptance has not occurred.
 
 The repository was inspected through the GitHub integration. The authorized feature branch was created from the latest observed `main` head. Implementation was not started because the available execution environment could not clone the repository and has no working DNS/network access to GitHub. The GitHub file connector can inspect and mutate individual text files, but it cannot provide a local checkout, install dependencies, run pytest, or validate the complete package coherently. Making a production-oriented exchange adapter through isolated unexecuted file writes would not meet the assignment's safety and completion criteria.
 
@@ -159,3 +178,349 @@ No paid cloud infrastructure or Codespaces were provisioned. No credentials or A
 - `main` was not modified or merged.
 - The feature branch and its prior commits remain intact.
 - The mission remains **incomplete and blocked**, pending a network-enabled execution environment.
+
+
+---
+
+## Continuation implementation — 2026-11-20
+
+**Task ID:** `PHASE-1-KUCOIN-AGENT-01`
+
+**Status:** PENDING_ALPHA_REVIEW — implementation and local verification performed; private account connectivity remains unverified without real credentials.
+
+This section records the initial implementation at commit `a954ebdded9ce8a1ad33352afce236f0730a50c2`, before ALPHA's review corrections. Corrections and current results are recorded below; older statements in this section are historical for that initial PR head.
+
+### Verified live repository state
+
+- Repository: `elvito2808/Trading-Management-Platform`
+- Base branch: `alpha/repository-governance-baseline`
+- Base SHA at workspace creation: `61db78870463fac959a1bb8cbf25eeef32ef41bf`
+- Task branch: `feature/phase-1-kucoin-integration`
+- Isolated workspace: `C:\Projects\Trading-Management-Platform-phase1-kucoin`
+- Python: `3.10.11`
+- Task branch existed remotely: no
+
+The local clone was isolated from the original validation workspace. No main or historical branch work was overwritten.
+
+### Instructions and documents read
+
+Read at the task branch: `AGENTS.md`; `AI_INSTRUCTIONS/GLOBAL_INSTRUCTIONS.md`; `AI_INSTRUCTIONS/RESEARCH_PROTOCOL.md`; `AI_INSTRUCTIONS/EXECUTION_PROTOCOL.md`; `AI_INSTRUCTIONS/README.md`; `docs/PROJECT_CONTROL.md`; `docs/PROJECT_STATUS.md`; `README.md`; `PROGRESS.md`; `docs/agents/README.md`; `docs/agents/IMPLEMENTATION_STATE.md`; `docs/ARCHITECTURE.md`; `docs/MODULES.md`; `config/platform.example.toml`; existing test modules; and this report as historical blocker evidence.
+
+### Environment and baseline
+
+Created `.venv` with Python 3.10.11, installed `-e ".[dev]"`, and ran `python -m pytest -q`. Baseline result: `43 passed in 1.80s`.
+
+### Official documentation research
+
+Primary official source: https://www.kucoin.com/docs
+
+The official documentation describes public/private REST domains, API permission scopes, timestamped HMAC-SHA256 signing, key-version-2 headers, shared rate-limit pools, and HTTP/API error codes.
+
+Implemented paths:
+
+- `GET /api/v1/symbols`
+- `GET /api/v1/symbols/{symbol}`
+- `GET /api/v1/market/allTickers`
+- `GET /api/v1/market/orderbook/level2_20`
+- `GET /api/v1/accounts`
+- `GET /api/v1/base-fee`
+
+Private-account and live fee behavior remain unverified without real credentials.
+
+### Architecture decisions
+
+- Added provider-neutral `ExchangeAdapter` Protocol.
+- Added Decimal-only typed ticker, symbol, order-book, balance, fee, and dry-run models.
+- Added a standard-library `urllib` KuCoin REST client.
+- Kept HTTP transport injectable for deterministic tests.
+- Added typed network, timeout, authentication, HTTP, rate-limit, and response exceptions.
+- Added explicit live/fallback/unavailable fee status.
+- Exposed no account-changing or order-changing method.
+
+### Implemented features
+
+- Symbol list/detail and multiple-pair tickers.
+- Bid, ask, spread, 24-hour fields, and REST order-book snapshot parsing.
+- Read-only balance parsing and account type.
+- Private API-key signing.
+- Live base-fee request with explicit fallback and unavailable states.
+- Local dry-run order preparation with quantity, increment, minimum/maximum, notional, and validation.
+- Bounded retry, exponential backoff, timeout, 429 guidance, malformed JSON, and unexpected response handling.
+
+### Files created or modified
+
+- `trading_platform/exchanges/__init__.py`
+- `trading_platform/exchanges/contracts.py`
+- `trading_platform/exchanges/models.py`
+- `trading_platform/exchanges/errors.py`
+- `trading_platform/exchanges/kucoin.py`
+- `tests/test_kucoin.py`
+- `docs/KUCOIN_INTEGRATION.md`
+- `.env.example`
+- `docs/PROJECT_STATUS.md`
+- `docs/agents/IMPLEMENTATION_STATE.md`
+- this report
+
+### Test results
+
+Focused command: `.venv\Scripts\python.exe -m pytest -q tests/test_kucoin.py`
+
+Focused result: `26 passed`.
+
+Full command: `.venv\Scripts\python.exe -m pytest -q`
+
+Full result: `69 passed in 0.90s`.
+
+### Security and safety
+
+- No credentials were requested or stored.
+- No live market, account, or fee endpoint was called.
+- No real KuCoin key was used.
+- No order, transfer, withdrawal, deposit, cancel, or amend operation exists.
+- Tests use dummy credentials only.
+- `.env` remains ignored.
+- Signatures, passphrases, and API keys are never included in logs or exception messages.
+
+### Known defects and limitations
+
+- Live private balance and fee connectivity are unverified.
+- Live public endpoint connectivity was not claimed.
+- The REST order book is a snapshot, not a synchronized stream.
+- Fee estimation is not yet populated by the dry-run method; it can be composed from explicit fee data later without adding an order request.
+- The live all-tickers response is used for 24-hour fields.
+
+### Remaining risks
+
+- Remote push and Draft PR creation require GitHub permissions.
+- `PENDING_ALPHA_REVIEW` is not acceptance or completion.
+- Independent verification needs a real read-only key.
+
+### Exact next actions
+
+1. Run focused and complete suites.
+2. Review the complete diff and scan for secrets.
+3. Commit on `feature/phase-1-kucoin-integration`.
+4. Push if credentials permit.
+5. Create a Draft PR to `alpha/repository-governance-baseline` if permissions permit.
+
+---
+
+## ALPHA review corrections — PR #5 (historical; superseded below)
+
+This section records the state after the first ALPHA correction at commit `4b9c3d7ae8d2037229459c273daf9499ba3fefd0`. Its pair-specific fee implementation and test counts are historical and were replaced by the latest continuation below.
+
+**Review:** https://github.com/elvito2808/Trading-Management-Platform/pull/5#issuecomment-7028142696
+**Working branch:** `feature/phase-1-kucoin-integration`
+**PR:** https://github.com/elvito2808/Trading-Management-Platform/pull/5
+**Correction commit:** `a85f233975eafba627f01eb679354122f7a14ca0`
+
+### Corrections made
+
+- Replaced the incorrect pair-fee request with `GET /api/v1/trade-fees?symbols={symbol}`.
+- Parses the documented list, selects the exact pair, and validates finite non-negative maker/taker rates. This adapter makes one-symbol requests; it does not batch.
+- Keeps `/api/v1/base-fee` distinguished as the basic account fee endpoint and does not use it for pair-specific fees.
+- Added caller-supplied `FeeInfo` to dry-run preparation. It never performs a private fee request and estimates maker/taker amounts with `Decimal`; market orders use taker only. Unknown fee data remains explicitly unavailable.
+- Added finite/positive quantity and price checks; quantity and price increments; min/max size; `minFunds`; and trading-enabled checks.
+- Fallback behavior now explicitly covers typed authentication, HTTP/API, rate-limit, network, and timeout errors only when enabled and when the fallback exchange/symbol matches. Malformed `Retry-After` uses bounded exponential backoff; unexpected programming exceptions propagate.
+- Market data timestamps now distinguish optional exchange `event_timestamp` from local `retrieved_at`. Missing exchange time remains `None`.
+- Updated official symbol metadata calls to the documented v2 endpoints, which expose `minFunds`.
+- Reconciled current PR #5, task branch, and historical environment-blocker records without deleting the original chronology.
+
+### Verification at the first ALPHA correction (historical)
+
+Python: `3.10.11`
+
+Focused command: `.venv\Scripts\python.exe -m pytest -q tests/test_kucoin.py`
+Result: `55 passed in 0.16s`.
+
+Full command: `.venv\Scripts\python.exe -m pytest -q`
+Result: `98 passed in 1.56s`.
+
+### Remaining limitations
+
+- No live KuCoin endpoints or credentials were used; private balance and fee connectivity remains unverified.
+- This adapter requests one fee symbol at a time (the documented endpoint supports up to 10).
+- Order-book retrieval remains a REST snapshot; WebSocket synchronization is not implemented.
+- No order submission or account-changing operation is present.
+
+### Delivery
+
+- Correction commit: `a85f233975eafba627f01eb679354122f7a14ca0`
+- PR #5 remains open and Draft; no second PR was created and no merge was performed.
+- Final status: `PENDING_ALPHA_REVIEW`
+- The correction commit and handoff updates have been pushed to the existing PR #5 branch.
+- Exact next action: ALPHA independently reviews the updated PR; do not merge until separately authorized.
+
+---
+
+## Historical owner continuation — fixed fee and WebSocket-first Best Bid/Ask
+
+**Task:** `PHASE-1-KUCOIN-AGENT-01`
+**Status:** `PENDING_ALPHA_REVIEW`
+**Branch:** `feature/phase-1-kucoin-integration`
+**PR:** [#5](https://github.com/elvito2808/Trading-Management-Platform/pull/5)
+**Implementation commit:** `d03e709ca3d9914ceebdbaea02cbb5ae71e4d1ce`
+**Base before this continuation:** `4b9c3d7ae8d2037229459c273daf9499ba3fefd0`
+**Python:** `3.10.11`
+
+### Corrections and implementation
+
+- Removed pair-specific `/api/v1/trade-fees` retrieval and fee fallback classes. Dry-run estimates now use the centrally defined `Decimal("0.001")` assumption for every symbol, side, and order type. The fixed assumption is not presented as an actual KuCoin rate; market orders are always labeled taker.
+- Replaced all-ticker and Level 2 order-book market data with Level 1 Best Bid/Ask only: `GET /api/v1/market/orderbook/level1?symbol=...`.
+- Added a single Classic Spot/Margin public WebSocket connection for configured symbols using `POST /api/v1/bullet-public`, the official `/market/ticker:{symbol}` subscription/ack protocol, and server-provided heartbeat intervals. Reconnect backoff is capped, shutdown is explicit, and duplicate `start()` calls do not create extra connections.
+- Coalesced concurrent requests for the same fresh REST fallback quote to avoid unnecessary duplicate requests.
+- Added source, optional exchange event time, local receipt time, freshness, and connection status. Stale WebSocket data falls back to REST; a failed fallback can return only an explicitly `STALE` quote.
+- Added explicit `FixedTradeSize` inputs. No trade quantities were invented, rounded, or derived from balances. Dry-run preparation requires a supplied quote or explicit price and makes no fee or Best Bid/Ask request on its own; it does retrieve public symbol metadata for validation.
+- Tightened Best Bid/Ask, account balance consistency, symbol metadata, finite Decimal, increment, quantity bounds, `minFunds`, trading status, and quote provenance validation.
+- `Retry-After` supports numeric seconds and HTTP dates, falls back safely on malformed values, and is capped at 60 seconds. Network and timeout retries remain bounded; unexpected programming errors propagate.
+- Updated the integration guide and project status/handoff records. Historical blocker entries and earlier commit/test records above are retained as history.
+
+### Verification
+
+The plain focused command was attempted first:
+
+`python -m pytest -q tests/test_kucoin.py`
+
+It did not reach test collection because global pytest plugin autoload imported `web3.tools.pytest_ethereum` and failed with `ImportError: cannot import name 'ContractName' from 'eth_typing'`. This is an environment plugin error, not a test failure.
+
+Successful commands were run from PowerShell with plugin autoload disabled:
+
+`$env:PYTEST_DISABLE_PLUGIN_AUTOLOAD = '1'; python -m pytest -q tests/test_kucoin.py`
+
+Result: **53 passed in 0.30s**.
+
+`$env:PYTEST_DISABLE_PLUGIN_AUTOLOAD = '1'; python -m pytest -q`
+
+Result: **96 passed in 1.20s**.
+
+These are the actual Python 3.10.11 results; no live KuCoin endpoint or real API key was used.
+
+### Remaining limitations and delivery
+
+- No live public WebSocket or private account connectivity was tested.
+- The fixed 0.1% fee is an owner-configured estimate, not live pair-specific fee data.
+- The application has no default per-symbol quantities; callers must supply explicit `FixedTradeSize` values.
+- `quoteMinSize` is retained as metadata but is not assigned quote-value semantics; documented `minFunds` is the enforced notional minimum.
+- The Classic Spot/Margin public feed is used; UTA Pro WebSocket uses a different connection and subscription protocol and is not mixed into this adapter.
+- Implementation commits `df0d4806b2bbeb76de96628c37b6d9f5992dee14` and `d03e709ca3d9914ceebdbaea02cbb5ae71e4d1ce` were pushed normally to the existing branch and PR #5. No second PR was created, no history was rewritten, and PR #5 was not merged.
+- Final status remains `PENDING_ALPHA_REVIEW`; ALPHA independently decides acceptance.
+
+## Owner continuation — final review corrections (2026-11-20)
+
+**Status:** `PENDING_ALPHA_REVIEW` — no ALPHA acceptance is claimed.
+**Branch:** `feature/phase-1-kucoin-integration`; PR #5 remains open and Draft.
+**Submitted HEAD at this historical correction:** `b098b231c9ab3f6d35201a5a91828c3d5632d3ca` (superseded by `cd07970b32396fed478fcdc6d85fa641e4033d26`).
+**Python:** `3.10.11`
+
+- WebSocket ticker parsing now reads `Time`; REST Level 1 reads `time`. Timestamp tests cover seconds, milliseconds, nanoseconds, UTC normalization, and source-specific field selection. Invalid or absent exchange time remains `None`; local receipt time is not used as a substitute.
+- `FixedFeePolicy` rejects every rate except `Decimal("0.001")`; the client uses the central policy. Buy and sell dry-run estimates share that Decimal rate and retain the `fixed-assumption` label.
+- Focused command: `$env:PYTEST_DISABLE_PLUGIN_AUTOLOAD = '1'; python -m pytest -q tests/test_kucoin.py` — **55 passed**.
+- Full command: `$env:PYTEST_DISABLE_PLUGIN_AUTOLOAD = '1'; python -m pytest -q` — **98 passed**.
+- Plain pytest remains affected by global plugin autoload failing to import `web3.tools.pytest_ethereum` because `eth_typing.ContractName` is unavailable. Successful validation used the commands above on Python 3.10.11.
+- Existing test coverage also checks WebSocket-first selection, REST fallback on disconnection and stale data, recovery only after fresh WebSocket data, Best Bid/Best Ask only, exact quantity without rounding, and absence of order submission/account-changing methods.
+- Limitations remain: no live KuCoin connection or private account access was exercised; no credentials, orders, transfers, withdrawals, or paid infrastructure were used. The fixed rate is an assumption, not account-specific KuCoin fee data.
+
+## Documentation consistency correction (2026-11-20)
+
+This update records the previous documentation reconciliation. At that time, `b098b231c9ab3f6d35201a5a91828c3d5632d3ca` was the submitted implementation HEAD. That SHA is now historical; the current submitted branch HEAD before the final reference correction is `cd07970b32396fed478fcdc6d85fa641e4033d26` on `feature/phase-1-kucoin-integration`. Current status remains `PENDING_ALPHA_REVIEW`, PR #5 remains Open, Draft, and Unmerged, and `main` was not modified. The 55 focused and 98 full test results are agent-reported; ALPHA has not independently rerun them. No combined status checks were reported for the latest reviewed commit, and no CI pass is claimed.
+
+## Final submitted HEAD reference correction (2026-11-20)
+
+- Repository: `elvito2808/Trading-Management-Platform`.
+- Branch: `feature/phase-1-kucoin-integration`.
+- Previous submitted HEAD: `b098b231c9ab3f6d35201a5a91828c3d5632d3ca` (historical implementation submission).
+- New documentation correction HEAD: `cd07970b32396fed478fcdc6d85fa641e4033d26`. This was the current submitted branch HEAD before this task's documentation-only commit.
+- This task corrects current submitted HEAD references only; no implementation code or tests changed, and no tests were rerun.
+- Test results remain agent-reported: focused 55 passed and full suite 98 passed. ALPHA has not independently rerun them.
+- PR #5 remains Open, Draft, and Unmerged. `main` was not modified. ALPHA acceptance has not occurred; status remains `PENDING_ALPHA_REVIEW`.
+
+
+## Local BNB/USDT simulator continuation — 2026-11-21
+
+Added a local-only simulator at `trading_platform/execution/kucoin_dry_run.py` and focused tests at `tests/test_kucoin_dry_run.py`. Defaults are BNB=5 / USDT=4000; BUY uses Ask and SELL uses Bid; fee rate is fixed at 0.001 and accounted in USDT solely as a deterministic simulator assumption. Actual KuCoin fee currency is not asserted. Simulator rejects invalid symbol/side/quantity/metadata/quote, stale quotes, quantities exceeding displayed top-of-book size, minimum-funds violations and insufficient balances without mutating state; reset restores configured starting balances. Documentation now describes example arithmetic and slippage/depth limitations.
+
+No live order endpoint, live account action, signing, broadcast, transfer or withdrawal was invoked. Price retrieval and private-balance retrieval were not modified. Agent test execution and final commit SHA must be recorded after verification; ALPHA independent acceptance remains pending.
+
+
+## Phase 1 deterministic simulator delivery report — 2026-11-21
+
+**Branch:** `feature/phase-1-kucoin-integration`  
+**PR:** [#5](https://github.com/elvito2808/Trading-Management-Platform/pull/5) — Open, Draft, Unmerged.  
+**Implementation status:** Simulator and documentation committed; automated execution verification is **not run in this agent session**, so Phase 1 completion is submitted for ALPHA review, not claimed independently accepted.
+
+### Changed files in this continuation
+
+- `trading_platform/execution/kucoin_dry_run.py` — isolated local simulator; no exchange client/network dependency.
+- `tests/test_kucoin_dry_run.py` — fee arithmetic, reconciliation, balance rejection, invalid symbol/side/quantity/quote, top-of-book size, disabled symbol, minFunds, reset and configurable initial balances.
+- `docs/KUCOIN_INTEGRATION.md` — simulator API, fee-currency assumption, worked examples and limitations.
+- `README.md` — simulator scope pointer.
+- `docs/PROJECT_STATUS.md`, `docs/agents/IMPLEMENTATION_STATE.md`, `PROGRESS.md` — continuation status and handoff.
+- This report.
+
+### Simulator examples
+
+Illustrative quote only: Ask=601 USDT, Bid=600 USDT; each example independently starts at BNB=5 / USDT=4000.
+
+- BUY 0.1 BNB: gross 60.1 USDT; fee 0.0601 USDT; USDT debit 60.1601; BNB credit 0.1; effective unit price 601.601 USDT/BNB; after balances BNB=5.1 / USDT=3939.8399.
+- SELL 0.1 BNB: gross 60.0 USDT; fee 0.0600 USDT; USDT net credit 59.9400; BNB debit 0.1; effective unit price 599.400 USDT/BNB; after balances BNB=4.9 / USDT=4059.9400.
+
+Fee rate 0.001 is the owner-configured estimate. USDT fee currency is strictly a local simulator accounting assumption, not a claim about KuCoin's actual fee currency or settlement.
+
+### Verification
+
+The following commands are the intended local verification commands, but were **not executed in this session** because this agent environment has GitHub repository access only and no checked-out project runtime:
+
+```bash
+PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest -q tests/test_kucoin_dry_run.py
+PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest -q
+```
+
+Previously reported baseline results (55 focused KuCoin / 98 full-suite passed on Python 3.10.11) predate this simulator and must not be represented as tests of this continuation. GitHub Actions currently reports zero workflow runs; no CI pass is claimed. ALPHA has not independently run the new tests.
+
+### Boundaries and limitations
+
+- KuCoin BNB/USDT REST/WebSocket price retrieval and private-balance retrieval were left unchanged.
+- The simulator does not call any live order endpoint. No order, cancel, signing, broadcast, transfer, withdrawal, or other real action occurred.
+- Full-fill at a single Level 1 Ask/Bid is an approximation; depth, partial fills, queue position, latency, market impact and slippage are not modeled.
+- Actual fee-currency behavior is not validated. Live quote/private-balance connectivity remains deferred to credential-backed owner testing.
+- Phase 1 remains pending ALPHA review. Comment 7053740543 does not set a Phase 2 prerequisite or grant future Live Trading authorization. No Live Trading implementation was started.
+
+**Commit:** This report was committed on the feature branch; verify the current branch HEAD through PR #5. No main-branch update, merge, or force-push was performed.
+
+
+## Correction after reviewing original ALPHA directive 7053740543 — 2026-11-21
+
+The original directive at https://github.com/elvito2808/Trading-Management-Platform/pull/5#issuecomment-7053740543 is the controlling acceptance scope. It asks for: fixed 0.1% trading-fee arithmetic (not gas); deterministic local BUY/SELL using BNB=5 and USDT=4000; Ask for BUY, Bid for SELL; USDT quote-currency accounting as a simulator assumption; validation, no-mutation rejection, reset, structured results, tests and documentation; unchanged REST/WebSocket price retrieval and private-balance retrieval; no live order/API credentials/signing/broadcast; no merge or main changes.
+
+The prior insufficient-balance test setup was defective: the test quantities were larger than the fixture's displayed top-of-book size, so the simulator rejected them before reaching the intended balance check. The fixture's displayed size was increased and explicit tests were added for (a) BUY where gross fits the USDT balance but gross plus fee does not, (b) future quote rejection, and (c) mismatched metadata exchange rejection. The simulator test module now has 24 test cases. **These tests have not been executed in this agent session.** The historical 55 focused / 98 full-suite passes predate this simulator and are not valid acceptance evidence for it. No test pass count is claimed for this change.
+
+The mistakenly forwarded comment 7053862674 contained additional language about Phase 2 acceptance as a prerequisite and conditional future Live Trading authorization. Those statements are not in original directive 7053740543 and are not recorded as scope or authorization arising from it. No Live Trading code or action was performed.
+
+The controlling directive's sample arithmetic remains: at illustrative Ask=601 / Bid=600, BUY 0.1 has gross 60.1, fee 0.0601, USDT debit 60.1601, effective price 601.601, final balances BNB=5.1 / USDT=3939.8399; SELL 0.1 has gross 60.0, fee 0.0600, net USDT credit 59.9400, effective price 599.400, final balances BNB=4.9 / USDT=4059.9400. Each starts independently from BNB=5 / USDT=4000.
+
+No price-retrieval or private-balance code was changed. No live order endpoint, real order, cancel, signing, broadcast, transfer, withdrawal or other financial action occurred. PR #5 remains Draft/Open/Unmerged, main untouched, Phase 1 PENDING_ALPHA_REVIEW.
+
+
+## Current Phase 1 verification — 2026-11-21
+
+Both owner instructions were reviewed and applied: [comment 7053740543](https://github.com/elvito2808/Trading-Management-Platform/pull/5#issuecomment-7053740543) is the Phase 1 scope reference; [comment 7053862674](https://github.com/elvito2808/Trading-Management-Platform/pull/5#issuecomment-7053862674) is additionally observed. Its conditional permission does not allow Live Trading implementation now: Phase 1 and Phase 2 must first be independently accepted, and separate explicit owner approval remains required before any real order or asset movement.
+
+- PR #5 is Open, Draft and Unmerged. Its branch is `feature/phase-1-kucoin-integration`; head is `aa7d65d281647596c43e4417020f5ae91687606b`, matching the expected SHA. No PR status checks were reported.
+- Tests ran locally on Python 3.10.11 in an isolated worktree at that exact commit. No dependency installation or code correction was needed.
+
+```text
+PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest -q tests/test_kucoin_dry_run.py
+........................                                                 [100%]
+24 passed in 0.11s
+
+PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest -q
+........................................................................ [ 59%]
+..................................................                       [100%]
+122 passed in 1.69s
+```
+
+Test counts: focused — 24 passed, 0 failed, 0 skipped, 0 errors; full — 122 passed, 0 failed, 0 skipped, 0 errors. These are actual local agent-run results, not CI results or a claim of independent ALPHA acceptance.
+
+The simulator validation confirms 0.1% (`0.001`) is accounted for as a trading fee, not gas; BUY uses Ask and SELL uses Bid; simulator fees are accounted against USDT; and the insufficient-USDT test includes the fee. The simulator is local and does not send KuCoin orders. This task's simulator work did not modify market-price retrieval or private-balance retrieval. No real order, cancel, signature, broadcast, transfer, withdrawal or other asset action occurred.
+
+Limitations: no CI result, live price-feed validation, private inventory/credential validation, actual KuCoin fee-currency behavior, or live execution was validated. A single top-of-book full fill does not establish depth, partial fills, latency, market impact or slippage. Phase 1 remains `PENDING_ALPHA_REVIEW` pending independent review; Phase 2 acceptance is also required before any Live Trading implementation may begin.
