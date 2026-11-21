@@ -53,6 +53,46 @@ def build_v2_swap_exact_eth_for_tokens_call(router: str, wbnb: str, usdt: str, v
             "value": hex(value_wei), "data": abi.to_hex(data)}
 
 
+def build_v2_swap_tokens_for_exact_eth_calldata(router: str, amount_out_wei: int, amount_in_max_wei: int,
+                                                path: list[str], recipient: str, block: BlockInfo) -> dict[str, str]:
+    """Build V2 exact-output calldata for local inspection/estimation only.
+
+    The caller must still supply an allowance in any future execution context;
+    this module has no approval or transaction-sending capability.
+    """
+    deadline = int(block.timestamp.timestamp()) + _DEADLINE_WINDOW_SECONDS
+    head = (abi.encode_uint(amount_out_wei) + abi.encode_uint(amount_in_max_wei) +
+            abi.encode_uint(5 * abi.WORD) + abi.encode_address(recipient) + abi.encode_uint(deadline))
+    data = abi.function_selector(abi.ABI_SIGNATURES["v2_router_swap_tokens_for_exact_eth"]) + head
+    return {"to": abi.normalize_address(router), "data": abi.to_hex(data + abi.encode_address_array(path))}
+
+
+def _build_v3_single_calldata(signature_name: str, router: str, token_in: str, token_out: str,
+                              fee_ppm: int, recipient: str, amount: int, limit: int,
+                              sqrt_price_limit_x96: int = 0) -> dict[str, str]:
+    words = (abi.encode_address(token_in), abi.encode_address(token_out), abi.encode_uint(fee_ppm, 24),
+             abi.encode_address(recipient), abi.encode_uint(amount), abi.encode_uint(limit),
+             abi.encode_uint(sqrt_price_limit_x96, 160))
+    data = abi.encode_call(abi.ABI_SIGNATURES[signature_name], *words)
+    return {"to": abi.normalize_address(router), "data": abi.to_hex(data)}
+
+
+def build_v3_exact_input_single_calldata(router: str, token_in: str, token_out: str, fee_ppm: int,
+                                         recipient: str, amount_in: int, amount_out_minimum: int = 0,
+                                         sqrt_price_limit_x96: int = 0) -> dict[str, str]:
+    return _build_v3_single_calldata("v3_router_exact_input_single", router, token_in, token_out,
+                                     fee_ppm, recipient, amount_in, amount_out_minimum,
+                                     sqrt_price_limit_x96)
+
+
+def build_v3_exact_output_single_calldata(router: str, token_in: str, token_out: str, fee_ppm: int,
+                                          recipient: str, amount_out: int, amount_in_maximum: int = 0,
+                                          sqrt_price_limit_x96: int = 0) -> dict[str, str]:
+    return _build_v3_single_calldata("v3_router_exact_output_single", router, token_in, token_out,
+                                     fee_ppm, recipient, amount_out, amount_in_maximum,
+                                     sqrt_price_limit_x96)
+
+
 class GasEstimator:
     def __init__(self, adapter: BscAdapter, simulation_sender: Optional[str] = None):
         self._bsc = adapter

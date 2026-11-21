@@ -95,6 +95,41 @@ def function_selector(signature: str) -> bytes:
     return keccak256(signature.encode("ascii"))[:4]
 
 
+# Canonical signatures used by the Phase 2 integration.  Keeping these in one
+# inventory makes every selector auditable from the Solidity ABI signature;
+# callers must not rely on undocumented numeric selector constants.
+ABI_SIGNATURES = {
+    "erc20_name": "name()",
+    "erc20_symbol": "symbol()",
+    "erc20_decimals": "decimals()",
+    "erc20_total_supply": "totalSupply()",
+    "erc20_balance_of": "balanceOf(address)",
+    "erc20_allowance": "allowance(address,address)",
+    "v2_factory_get_pair": "getPair(address,address)",
+    "v2_pair_get_reserves": "getReserves()",
+    "v2_router_get_amounts_out": "getAmountsOut(uint256,address[])",
+    "v2_router_get_amounts_in": "getAmountsIn(uint256,address[])",
+    "v2_router_swap_exact_eth_for_tokens": "swapExactETHForTokens(uint256,address[],address,uint256)",
+    "v2_router_swap_tokens_for_exact_eth": "swapTokensForExactETH(uint256,uint256,address[],address,uint256)",
+    "v3_factory_get_pool": "getPool(address,address,uint24)",
+    "v3_factory_fee_spacing": "feeAmountTickSpacing(uint24)",
+    "v3_pool_slot0": "slot0()",
+    "v3_quoter_exact_input_single": "quoteExactInputSingle((address,address,uint256,uint24,uint160))",
+    "v3_quoter_exact_output_single": "quoteExactOutputSingle((address,address,uint256,uint24,uint160))",
+    # PancakeSwap V3 SwapRouter calldata inventory; builders are local-only.
+    "v3_router_exact_input_single": "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
+    "v3_router_exact_output_single": "exactOutputSingle((address,address,uint24,address,uint256,uint256,uint160))",
+}
+
+
+def selector_for(name: str) -> bytes:
+    """Return the selector for a named, documented ABI signature."""
+    try:
+        return function_selector(ABI_SIGNATURES[name])
+    except KeyError as exc:
+        raise InvalidInputError(f"unknown ABI inventory entry: {name}") from exc
+
+
 # --------------------------------------------------------------------------
 # Addresses
 # --------------------------------------------------------------------------
@@ -148,6 +183,14 @@ def encode_address(address: str) -> bytes:
 
 def encode_address_array(addresses: Sequence[str]) -> bytes:
     return encode_uint(len(addresses)) + b"".join(encode_address(a) for a in addresses)
+
+
+def encode_call_address(signature: str, address: str) -> bytes:
+    return encode_call(signature, encode_address(address))
+
+
+def encode_call_address_address(signature: str, first: str, second: str) -> bytes:
+    return encode_call(signature, encode_address(first), encode_address(second))
 
 
 def encode_call(signature: str, *static_words: bytes) -> bytes:

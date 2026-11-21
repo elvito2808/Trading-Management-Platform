@@ -166,3 +166,46 @@ class JsonRpcClient:
         if "result" not in payload:
             raise RpcConnectionError("RPC response has neither result nor error")
         return payload["result"]
+
+
+class FailoverJsonRpcClient:
+    """Bounded read-only failover across explicitly configured endpoints."""
+
+    def __init__(self, urls: list[str] | tuple[str, ...], transport: Optional[Transport] = None,
+                 timeout: float = 10.0, max_retries: int = 2,
+                 sleep: Callable[[float], None] = time.sleep):
+        if not urls:
+            raise ConfigurationError("at least one RPC URL is required")
+        self._clients = [JsonRpcClient(url, transport=transport, timeout=timeout,
+                                       max_retries=max_retries, sleep=sleep) for url in urls]
+        self._active = 0
+        self.failover_errors: list[str] = []
+
+    @property
+    def endpoint_description(self) -> str:
+        return self._clients[self._active].endpoint_description
+
+    @property
+    def request_count(self) -> int:
+        return sum(client.request_count for client in self._clients)
+
+    def call(self, method: str, params: Optional[list[Any]] = None) -> Any:
+        JsonRpcClient.assert_method_allowed(method)
+        last_error: Exception | None = None
+        for offset in range(len(self._clients)):
+            index = (self._active + offset) % len(self._clients)
+            client = self._clients[index]
+            try:
+                result = client.call(method, params)
+                self._active = index
+                return result
+            except RpcConnectionError as exc:
+                last_error = exc
+                self.failover_errors.append(f"{client.endpoint_description} :: {method}: {exc}")
+            except RpcResponseError as exc:
+                if not JsonRpcClient._is_transient(exc):
+                    raise
+                last_error = exc
+                self.failover_errors.append(f"{client.endpoint_description} :: {method}: {exc}")
+        assert last_error is not None
+        raise last_error

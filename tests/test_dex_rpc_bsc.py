@@ -8,7 +8,7 @@ from trading_platform.dex.errors import (
     ChainIdMismatchError, ConfigurationError, ContractCallError, RpcConnectionError,
     RpcMethodNotAllowedError, RpcResponseError, RpcTimeoutError)
 from trading_platform.dex.models import DataValidity
-from trading_platform.dex.rpc import JsonRpcClient, READ_ONLY_METHODS, redact_url, validate_rpc_url
+from trading_platform.dex.rpc import FailoverJsonRpcClient, JsonRpcClient, READ_ONLY_METHODS, redact_url, validate_rpc_url
 
 URL = "https://rpc.example.invalid/KEY123"
 
@@ -64,6 +64,19 @@ class SafetyTests(unittest.TestCase):
         with self.assertRaises(RpcTimeoutError):
             client.call("eth_chainId")
         self.assertEqual(len(calls), 3)
+
+    def test_failover_moves_to_next_endpoint_and_records_infrastructure_error(self):
+        class EndpointTransport:
+            def post(self, url, body, timeout):
+                if "bad" in url:
+                    raise RpcTimeoutError("endpoint timeout")
+                return json.dumps({"jsonrpc": "2.0", "id": json.loads(body)["id"], "result": "0x38"}).encode()
+
+        client = FailoverJsonRpcClient(("https://bad.example", "https://good.example"),
+                                       transport=EndpointTransport(), max_retries=0, sleep=lambda s: None)
+        self.assertEqual(client.call("eth_chainId"), "0x38")
+        self.assertEqual(client.endpoint_description, "https://good.example")
+        self.assertIn("bad.example", client.failover_errors[0])
 
     def test_revert_is_not_retried(self):
         chain = FakeChain()

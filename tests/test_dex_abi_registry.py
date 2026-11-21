@@ -20,6 +20,12 @@ class AbiTests(unittest.TestCase):
         for sig, sel in known.items():
             self.assertEqual(abi.function_selector(sig).hex(), sel, sig)
 
+    def test_documented_abi_inventory_has_no_selector_assumptions(self):
+        self.assertEqual(abi.selector_for("erc20_balance_of").hex(), "70a08231")
+        self.assertEqual(abi.selector_for("erc20_allowance").hex(), "dd62ed3e")
+        self.assertEqual(abi.selector_for("v3_quoter_exact_output_single").hex(), "bd21704a")
+        self.assertIn("v3_router_exact_input_single", abi.ABI_SIGNATURES)
+
     def test_eip55(self):
         good = "0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed"
         self.assertTrue(abi.is_checksum_address(good))

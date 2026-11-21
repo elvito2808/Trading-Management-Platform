@@ -32,9 +32,10 @@ from .models import (
     TokenInfo,
 )
 from .registry import BSC_CHAIN_ID
-from .rpc import JsonRpcClient, Transport
+from .rpc import FailoverJsonRpcClient, JsonRpcClient, Transport
 
 ENV_RPC_URL = "BSC_RPC_URL"
+ENV_RPC_URLS = "BSC_RPC_URLS"
 ENV_RPC_TIMEOUT = "BSC_RPC_TIMEOUT_SECONDS"
 ENV_RPC_RETRIES = "BSC_RPC_MAX_RETRIES"
 ENV_MAX_BLOCK_AGE = "BSC_MAX_BLOCK_AGE_SECONDS"
@@ -49,11 +50,15 @@ class BscAdapterConfig:
     timeout_seconds: float = 10.0
     max_retries: int = 2
     max_block_age_seconds: int = 30
+    rpc_urls: tuple[str, ...] = ()
 
     @classmethod
     def from_env(cls, environ: Optional[Mapping[str, str]] = None) -> "BscAdapterConfig":
         env = os.environ if environ is None else environ
         url = env.get(ENV_RPC_URL, "").strip()
+        urls = tuple(item.strip() for item in env.get(ENV_RPC_URLS, "").split(",") if item.strip())
+        if not url and urls:
+            url = urls[0]
         if not url:
             raise ConfigurationError(
                 f"{ENV_RPC_URL} is not set. Configure any BSC RPC endpoint (public or your own node); "
@@ -65,7 +70,8 @@ class BscAdapterConfig:
             max_age = int(env.get(ENV_MAX_BLOCK_AGE, "30"))
         except ValueError as exc:
             raise ConfigurationError("invalid numeric BSC_* setting") from exc
-        return cls(rpc_url=url, timeout_seconds=timeout, max_retries=retries, max_block_age_seconds=max_age)
+        return cls(rpc_url=url, timeout_seconds=timeout, max_retries=retries,
+                   max_block_age_seconds=max_age, rpc_urls=urls or (url,))
 
 
 def _hex_to_int(value: Any, what: str) -> int:
@@ -93,9 +99,10 @@ class BscAdapter:
     ):
         self.config = config
         self._clock = clock
-        self._rpc = JsonRpcClient(
-            config.rpc_url, transport=transport, timeout=config.timeout_seconds,
-            max_retries=config.max_retries, sleep=sleep,
+        urls = config.rpc_urls or (config.rpc_url,)
+        self._rpc = (FailoverJsonRpcClient if len(urls) > 1 else JsonRpcClient)(
+            urls if len(urls) > 1 else urls[0], transport=transport,
+            timeout=config.timeout_seconds, max_retries=config.max_retries, sleep=sleep,
         )
         self._chain_verified = False
 
@@ -262,6 +269,23 @@ class BscAdapter:
         return TokenInfo(address=checked, symbol=symbol, name=name, decimals=decimals,
                          total_supply_raw=total_supply, has_code=has_code,
                          provenance=self._provenance(f"token {checked}", validity, block_number=block, issues=tuple(issues)))
+
+    def get_token_balance(self, token: str, owner: str, decimals: int = 18,
+                          symbol: str = "TOKEN", block: Optional[int] = None) -> TokenAmount:
+        """Read an ERC-20 balance; this never accesses wallet keys or mutates state."""
+        raw = _hex_to_int(self._rpc.call("eth_call", [{
+            "to": abi.normalize_address(token),
+            "data": abi.to_hex(abi.encode_call_address(abi.ABI_SIGNATURES["erc20_balance_of"], owner)),
+        }, hex(block) if block is not None else "latest"]), "token balance")
+        return TokenAmount(raw=raw, decimals=decimals, symbol=symbol)
+
+    def get_token_allowance(self, token: str, owner: str, spender: str,
+                            block: Optional[int] = None) -> int:
+        """Read an ERC-20 allowance as raw units; no approval operation exists here."""
+        data = abi.encode_call(abi.ABI_SIGNATURES["erc20_allowance"],
+                               abi.encode_address(owner), abi.encode_address(spender))
+        raw = self.eth_call(token, data, block)
+        return abi.decode_uint(raw)
 
     def snapshot_block(self) -> BlockInfo:
         """Latest block used to pin every read of one evaluation to the same state."""

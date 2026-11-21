@@ -37,8 +37,8 @@ DEX_NAME = "PancakeSwap V3"
 FEE_DENOMINATOR_PPM = 1_000_000
 _Q96 = 2 ** 96
 
-_SIG_QUOTE_IN = "quoteExactInputSingle((address,address,uint256,uint24,uint160))"
-_SIG_QUOTE_OUT = "quoteExactOutputSingle((address,address,uint256,uint24,uint160))"
+_SIG_QUOTE_IN = abi.ABI_SIGNATURES["v3_quoter_exact_input_single"]
+_SIG_QUOTE_OUT = abi.ABI_SIGNATURES["v3_quoter_exact_output_single"]
 _SEL_SLOT0 = abi.function_selector("slot0()")
 _SEL_LIQUIDITY = abi.function_selector("liquidity()")
 _SEL_FEE = abi.function_selector("fee()")

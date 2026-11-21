@@ -8,7 +8,11 @@ from trading_platform.dex import abi
 from trading_platform.dex.bsc import BscAdapter, BscAdapterConfig
 from trading_platform.dex.dry_run import FIXED_BNB_AMOUNT_WEI, DryRunPreparer
 from trading_platform.dex.errors import InvalidInputError
-from trading_platform.dex.gas import GasEstimator, build_v2_swap_exact_eth_for_tokens_call, convert_bnb_cost_to_usdt
+from trading_platform.dex.gas import (GasEstimator, build_v2_swap_exact_eth_for_tokens_call,
+                                       build_v2_swap_tokens_for_exact_eth_calldata,
+                                       build_v3_exact_input_single_calldata,
+                                       build_v3_exact_output_single_calldata,
+                                       convert_bnb_cost_to_usdt)
 from trading_platform.dex.models import Direction, GasStatus, NonSendablePlan
 from trading_platform.dex.rpc import READ_ONLY_METHODS
 
@@ -46,6 +50,19 @@ class GasTests(unittest.TestCase):
         self.assertEqual(int(call["value"], 16), FIXED_BNB_AMOUNT_WEI)
         self.assertNotIn("nonce", call)
         self.assertNotIn("signature", call)
+
+    def test_future_execution_calldata_is_constructible_but_non_sendable(self):
+        _, bsc, _ = make()
+        block = bsc.get_block()
+        exact_out = build_v2_swap_tokens_for_exact_eth_calldata(
+            V2_ROUTER, FIXED_BNB_AMOUNT_WEI, 700 * 10**18, [USDT, WBNB], SENDER, block)
+        self.assertEqual(abi.hex_to_bytes(exact_out["data"])[:4].hex(), "4a25d94a")
+        v3_in = build_v3_exact_input_single_calldata("0x" + "12" * 20, WBNB, USDT, 500, SENDER, FIXED_BNB_AMOUNT_WEI)
+        v3_out = build_v3_exact_output_single_calldata("0x" + "12" * 20, USDT, WBNB, 500, SENDER, FIXED_BNB_AMOUNT_WEI)
+        self.assertEqual(len(abi.hex_to_bytes(v3_in["data"])), 4 + 7 * abi.WORD)
+        self.assertEqual(len(abi.hex_to_bytes(v3_out["data"])), 4 + 7 * abi.WORD)
+        self.assertNotIn("from", exact_out)
+        self.assertNotIn("private", str(v3_in).lower())
 
     def test_node_estimate_partial_hint_and_unknown(self):
         chain, bsc, _ = make()
